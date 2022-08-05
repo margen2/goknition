@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"text/template"
+
+	"github.com/margen2/goknition/data"
 )
 
 var tpl *template.Template
@@ -25,11 +28,16 @@ func index(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			log.Fatal(err)
 		}
+		return
 	}
 
-	IDs := r.FormValue("id")
-	data := r.FormValue("data")
+	IDPath := r.FormValue("ids")
+	filesPath := r.FormValue("pics")
 
-	fmt.Println(IDs, data)
+	IDsData := data.LoadIDs(IDPath)
+	filesData := data.LoadImages(filesPath)
 
+	fmt.Println(IDsData)
+	fmt.Println(strings.Repeat("-", 45))
+	fmt.Println(filesData)
 }
