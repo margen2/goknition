@@ -31,13 +31,17 @@ func index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	IDPath := r.FormValue("ids")
-	filesPath := r.FormValue("pics")
+	var images []data.Image
+	images = data.LoadImages(r.FormValue("files"), images)
+	IDs := data.LoadIDs(r.FormValue("ids"))
 
-	IDsData := data.LoadIDs(IDPath)
-	filesData := data.LoadImages(filesPath)
+	for _, v := range images {
+		fmt.Println(v.Path)
+	}
 
-	fmt.Println(IDsData)
 	fmt.Println(strings.Repeat("-", 45))
-	fmt.Println(filesData)
+
+	for _, v := range IDs {
+		fmt.Println(v.Path)
+	}
 }

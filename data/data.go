@@ -1,7 +1,7 @@
 package data
 
 import (
-	"io/fs"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -9,72 +9,76 @@ import (
 
 type ID struct {
 	Name string
-	Picture
+	Image
 }
-type Picture struct {
-	PictureID string
-	Path      string
-	File      *fs.DirEntry
+type Image struct {
+	ImageID string
+	Path    string
+	Bytes   []byte
 }
-type Matches struct {
-	Picture
-	Ids []ID
-}
-
-var picturesRaw []Picture
-var picturesIDs []ID
 
 // LoadIds receives a path and returns a slice of type ID that contains all of the
 // ids and files in the specified path
 func LoadIDs(path string) []ID {
-	xdir, err := os.ReadDir(path)
+	dirs, err := os.ReadDir(path)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("loadids: %w", err))
 	}
 
-	copyIDFiles(xdir, path)
-	return picturesIDs
+	var IDs []ID
+	for _, dir := range dirs {
+		if dir.IsDir() {
+			log.Fatal("loadids: file is dir")
+		}
+
+		filePath := filepath.Join(path, dir.Name())
+		b := getImageBytes(filePath)
+		IDs = append(IDs, ID{
+			dir.Name(), Image{dir.Name(), filePath, b}})
+	}
+	return IDs
 }
 
-// LoadImages receives a path and returns a slice of type Picture that contains
+// LoadImages receives a path and returns a slice of type Image that contains
 // all of the files in the specified path
-func LoadImages(path string) []Picture {
-	xdir, err := os.ReadDir(path)
+func LoadImages(path string, images []Image) []Image {
+	dirs, err := os.ReadDir(path)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Errorf("copyimagefiles: %w", err))
 	}
 
-	copyImageFiles(xdir, path)
-	return picturesRaw
-}
-
-func copyIDFiles(xdir []fs.DirEntry, path string) {
-	for _, dir := range xdir {
+	for _, dir := range dirs {
 		if dir.IsDir() {
 			path = filepath.Join(path, dir.Name())
-			xdir2, err := os.ReadDir(path)
-			if err != nil {
-				log.Fatal(err)
-			}
-			copyIDFiles(xdir2, path)
+			LoadImages(path, images)
 			break
 		}
-		name := filepath.Base(path)
-		picturesIDs = append(picturesIDs, ID{name, Picture{dir.Name(), filepath.Join(path, dir.Name()), &dir}})
+
+		filePath := filepath.Join(path, dir.Name())
+		b := getImageBytes(filePath)
+		images = append(images, Image{dir.Name(), filePath, b})
 	}
+	return images
 }
 
-func copyImageFiles(xdir []fs.DirEntry, path string) {
-	for _, dir := range xdir {
-		if dir.IsDir() {
-			path = filepath.Join(path, dir.Name())
-			xdir2, err := os.ReadDir(path)
-			if err != nil {
-				log.Fatal(err)
-			}
-			copyImageFiles(xdir2, path)
-			break
-		}
-		picturesRaw = append(picturesRaw, Picture{dir.Name(), filepath.Join(path, dir.Name()), &dir})
+func getImageBytes(filePath string) []byte {
+	fl, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal(fmt.Errorf("getimagebytes/os.open: %w", err))
 	}
+	defer fl.Close()
+
+	fileInfo, err := fl.Stat()
+	if err != nil {
+		log.Fatal(fmt.Errorf("getimagebytes/fl.open: %w", err))
+	}
+	var size int64 = fileInfo.Size()
+	b := make([]byte, size)
+
+	n, err := fl.Read(b)
+	if err != nil || n == 0 {
+		log.Fatal(fmt.Errorf("getimagebytes/fl.read: %w", err))
+	}
+
+	return b
 }
