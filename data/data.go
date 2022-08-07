@@ -5,38 +5,53 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
-type ID struct {
-	Name string
-	Image
-}
-type Image struct {
-	ImageID string
-	Path    string
-	Bytes   []byte
+type Face struct {
+	ID    string
+	Image Image
 }
 
-// LoadIds receives a path and returns a slice of type ID that contains all of the
-// ids and files in the specified path
-func LoadIDs(path string) []ID {
+type Image struct {
+	ID    string
+	Path  string
+	Bytes []byte
+}
+
+// LoadFaces receives a path and returns a slice of type Face that contains all of the
+// IDs and files in the specified path
+func LoadFaces(path string) []Face {
 	dirs, err := os.ReadDir(path)
 	if err != nil {
-		log.Fatal(fmt.Errorf("loadids: %w", err))
+		log.Fatal(fmt.Errorf("loadfaces: %w", err))
 	}
 
-	var IDs []ID
+	var faces []Face
 	for _, dir := range dirs {
 		if dir.IsDir() {
-			log.Fatal("loadids: file is dir")
-		}
+			ID := dir.Name()
 
-		filePath := filepath.Join(path, dir.Name())
-		b := getImageBytes(filePath)
-		IDs = append(IDs, ID{
-			dir.Name(), Image{dir.Name(), filePath, b}})
+			filePath := filepath.Join(path, ID)
+			fls, err := os.ReadDir(filePath)
+			if err != nil {
+				log.Fatal(fmt.Errorf("loadfaces: %w", err))
+			}
+
+			fl := fls[0]
+
+			filePath = filepath.Join(filePath, fl.Name())
+			b := getImageBytes(filePath)
+			imageID := strings.Split(fl.Name(), ".")[0]
+
+			faces = append(faces, Face{
+				ID, Image{imageID, filePath, b}})
+
+			continue
+		}
+		log.Fatal("loadfaces: unexpected file in path")
 	}
-	return IDs
+	return faces
 }
 
 // LoadImages receives a path and returns a slice of type Image that contains
@@ -56,7 +71,9 @@ func LoadImages(path string, images []Image) []Image {
 
 		filePath := filepath.Join(path, dir.Name())
 		b := getImageBytes(filePath)
-		images = append(images, Image{dir.Name(), filePath, b})
+		imageID := strings.Split(dir.Name(), ".")[0]
+
+		images = append(images, Image{imageID, filePath, b})
 	}
 	return images
 }
