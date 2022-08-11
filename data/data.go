@@ -6,28 +6,19 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/margen2/goknition/models"
 )
-
-type Face struct {
-	ID    string
-	Image Image
-}
-
-type Image struct {
-	ID    string
-	Path  string
-	Bytes []byte
-}
 
 // LoadFaces receives a path and returns a slice of type Face that contains all of the
 // IDs and files in the specified path
-func LoadFaces(path string) []Face {
+func LoadFaces(path string) []models.Face {
 	dirs, err := os.ReadDir(path)
 	if err != nil {
 		log.Fatal(fmt.Errorf("loadfaces: %w", err))
 	}
 
-	var faces []Face
+	var faces []models.Face
 	for _, dir := range dirs {
 		if dir.IsDir() {
 			ID := dir.Name()
@@ -39,13 +30,11 @@ func LoadFaces(path string) []Face {
 			}
 
 			fl := fls[0]
-
-			filePath = filepath.Join(filePath, fl.Name())
-			b := getImageBytes(filePath)
+			filePath = filepath.ToSlash(filePath)
 			imageID := strings.Split(fl.Name(), ".")[0]
 
-			faces = append(faces, Face{
-				ID, Image{imageID, filePath, b}})
+			faces = append(faces, models.Face{
+				ID, models.Image{imageID, filePath}})
 
 			continue
 		}
@@ -56,7 +45,7 @@ func LoadFaces(path string) []Face {
 
 // LoadImages receives a path and returns a slice of type Image that contains
 // all of the files in the specified path
-func LoadImages(path string, images []Image) []Image {
+func LoadImages(path string, images []models.Image) []models.Image {
 	dirs, err := os.ReadDir(path)
 	if err != nil {
 		log.Fatal(fmt.Errorf("copyimagefiles: %w", err))
@@ -69,33 +58,10 @@ func LoadImages(path string, images []Image) []Image {
 			break
 		}
 
-		filePath := filepath.Join(path, dir.Name())
-		b := getImageBytes(filePath)
+		path = filepath.ToSlash(path)
 		imageID := strings.Split(dir.Name(), ".")[0]
 
-		images = append(images, Image{imageID, filePath, b})
+		images = append(images, models.Image{imageID, path})
 	}
 	return images
-}
-
-func getImageBytes(filePath string) []byte {
-	fl, err := os.Open(filePath)
-	if err != nil {
-		log.Fatal(fmt.Errorf("getimagebytes/os.open: %w", err))
-	}
-	defer fl.Close()
-
-	fileInfo, err := fl.Stat()
-	if err != nil {
-		log.Fatal(fmt.Errorf("getimagebytes/fl.open: %w", err))
-	}
-	var size int64 = fileInfo.Size()
-	b := make([]byte, size)
-
-	n, err := fl.Read(b)
-	if err != nil || n == 0 {
-		log.Fatal(fmt.Errorf("getimagebytes/fl.read: %w", err))
-	}
-
-	return b
 }
