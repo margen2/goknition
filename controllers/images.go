@@ -158,6 +158,30 @@ func GetCollections(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func DeleteCollection(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		err := tpl.ExecuteTemplate(w, "delete-collection.gohtml", nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+
+	collectionID := r.FormValue("collection")
+	err := api.DeleteCollection(collectionID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = tpl.ExecuteTemplate(w, "delete-collection.gohtml", collectionID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func Query(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		err := tpl.ExecuteTemplate(w, "query.gohtml", nil)
