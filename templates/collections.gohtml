@@ -1,0 +1,13 @@
+<h1>Paste the paths for the IDs</h1>
+<form method="post">
+<input type="text" name="ids" placeholder="IDs Path here">
+<div>
+<input type="text" name="collection" placeholder="CollectionID here">
+<div>
+<input type="submit" value=" submit">
+<div>
+<a href=/> back to menu  </a>
+<div>
+{{if .}}
+<h2>successfully created collection: {{.}}</h2>
+{{end}}

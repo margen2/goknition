@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"log"
 	"net/http"
 	"text/template"
 
@@ -40,7 +39,7 @@ func Data(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	images, faces, err := data.Load(r.FormValue("files"), r.FormValue("ids"))
+	images, err := data.Load(r.FormValue("files"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -63,22 +62,8 @@ func Data(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	for _, face := range faces {
-		imageID, err := repositorie.CreateImage(face.Image)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		err = repositorie.CreateFace(face, imageID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-
 	collectionID := r.FormValue("collection")
-	matches, nomatches, err := api.GetMatches(faces, images, collectionID)
+	matches, nomatches, err := api.GetMatches(images, collectionID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -104,9 +89,59 @@ func Data(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "query", http.StatusSeeOther)
 }
 
+func CreateCollection(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		err := tpl.ExecuteTemplate(w, "collections.gohtml", nil)
+		if err != nil {
+			return
+		}
+		return
+	}
+
+	faces, err := data.LoadFaces(r.FormValue("ids"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	db, err := db.ConnectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	repositorie := repositories.NewImagesRepositorie(db)
+
+	for _, face := range faces {
+		imageID, err := repositorie.CreateImage(face.Image)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = repositorie.CreateFace(face, imageID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	collectionID := r.FormValue("collection")
+	err = api.PrepareCollection(collectionID, faces)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = tpl.ExecuteTemplate(w, "collections.gohtml", collectionID)
+	if err != nil {
+		return
+	}
+}
+
 func Query(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		err := tpl.ExecuteTemplate(w, "quer.gohtml", nil)
+		err := tpl.ExecuteTemplate(w, "query.gohtml", nil)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -160,6 +195,6 @@ func NoMatch(w http.ResponseWriter, r *http.Request) {
 	err = tpl.ExecuteTemplate(w, "nomatch.gohtml", images)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Fatal(err)
+		return
 	}
 }

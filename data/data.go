@@ -9,7 +9,8 @@ import (
 	"github.com/margen2/goknition/models"
 )
 
-func loadFaces(path string) ([]models.Face, error) {
+// LoadFaces receives a path and returns all of the faces within the given path
+func LoadFaces(path string) ([]models.Face, error) {
 	dirs, err := os.ReadDir(path)
 	if err != nil {
 		return nil, fmt.Errorf("loadfaces/os.readdir: %w", err)
@@ -26,7 +27,6 @@ func loadFaces(path string) ([]models.Face, error) {
 				return nil, fmt.Errorf("loadfaces/range/os.readdir: %w", err)
 			}
 
-			fmt.Println(len(fls))
 			if len(fls) != 1 {
 				return nil, fmt.Errorf("loadfaces/range: ID folder has an invalid amount of files: %s", filePath)
 			}
@@ -67,21 +67,16 @@ func loadImages(path string) error {
 	return nil
 }
 
-// Load receives two different paths, one to an images folder, and the other to a faces folder. It returns
-//a slice of type Image and a slice of type Face with all of the images and faces in the corresponding paths.
-func Load(imagesPath, facesPath string) ([]models.Image, []models.Face, error) {
+// Load receives a path to an images folder. It returns a slice of type Image
+// with all of the images in the corresponding path.
+func Load(imagesPath string) ([]models.Image, error) {
 	err := loadImages(imagesPath)
 	if err != nil {
-		return nil, nil, fmt.Errorf("load: %w", err)
+		return nil, fmt.Errorf("load: %w", err)
 	}
 	defer func() {
 		images = images[cap(images):]
 	}()
 
-	faces, err := loadFaces(facesPath)
-	if err != nil {
-		return nil, nil, fmt.Errorf("load: %w", err)
-	}
-
-	return images, faces, nil
+	return images, nil
 }

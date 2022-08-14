@@ -15,6 +15,7 @@ func main() {
 	http.HandleFunc("/", controllers.Index)
 	http.HandleFunc("/data", controllers.Data)
 	http.HandleFunc("/query", controllers.Query)
+	http.HandleFunc("/create-collection", controllers.CreateCollection)
 	http.HandleFunc("/no-match", controllers.NoMatch)
 	http.Handle("/favicon.ico", http.NotFoundHandler())
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("localhost:%d", config.Port), nil))
