@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/rekognition"
 	"github.com/margen2/goknition/models"
 )
 
@@ -22,6 +23,25 @@ func PrepareCollection(collectionID string, faces []models.Face) error {
 	}
 
 	return nil
+}
+
+// ListCollections returns a list that contains all of the collection IDs created by
+// the connected AWS account.
+func ListCollections() ([]string, error) {
+	svc := newClient()
+	input := &rekognition.ListCollectionsInput{}
+
+	result, err := svc.ListCollections(input)
+	if err != nil {
+		return nil, fmt.Errorf("svc.listcollection: %w", err)
+	}
+
+	var collectionsIDs []string
+	for _, ID := range result.CollectionIds {
+		collectionsIDs = append(collectionsIDs, *ID)
+	}
+
+	return collectionsIDs, nil
 }
 
 // Getmatches receives a list of images and returns all of the matches found using the specified collections.

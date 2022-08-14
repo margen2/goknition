@@ -1,0 +1,9 @@
+<h1>List of active collections:</h1>
+<div>
+{{if .}}
+{{range .}}
+{{print .}}
+{{end}}
+{{else}}
+<h2> No collections found </h2>
+{{end}}

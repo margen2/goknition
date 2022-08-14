@@ -139,6 +139,25 @@ func CreateCollection(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func GetCollections(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	collections, err := api.ListCollections()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = tpl.ExecuteTemplate(w, "list-collections.gohtml", collections)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func Query(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		err := tpl.ExecuteTemplate(w, "query.gohtml", nil)
