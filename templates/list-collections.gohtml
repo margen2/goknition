@@ -1,7 +1,6 @@
-<h1>List of active collections:</h1>
+<h1>List of active collections</h1>
 <div>
-<a href=/> back to the menu  </a>
-<div>
+
 {{if .}}
 {{range .}}
 {{print .}}
@@ -9,3 +8,11 @@
 {{else}}
 <h2> No collections found </h2>
 {{end}}
+<br>
+<br>
+<a href=/create-collection> create collection  </a>
+<div>
+<a href=/delete-collection> delete collection  </a>
+<div>
+<br>
+<a href=/> menu  </a>

@@ -1,12 +1,13 @@
 <h1>Query for a specific face</h1>
 <form method="post">
-<input type="text" name="q" placeholder="Query here">
-<input type="submit" value="submit">
+<input type="text" name="q" placeholder="Face ID">
+<input type="submit" value="search">
 <div>
+<br>
 <a href=/no-match> see the pictures without a matching face </a>
 <div>
-<div>
-<a href=/> back to the menu  </a>
+<br>
+<a href=/> menu  </a>
 {{if .}}
 {{range .}}
 <h2>{{.Path}}\{{.FileName}}.JPG</h2>

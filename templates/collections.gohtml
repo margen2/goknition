@@ -1,13 +1,20 @@
-<h1>Paste the paths for the IDs</h1>
+<h1>Create a collection and index faces</h1>
+<p> Paste the path to the IDs folder below and add a ID for the collection. </p> 
 <form method="post">
-<input type="text" name="ids" placeholder="IDs Path here">
+<input type="text" name="ids" placeholder="Path to the IDs folder " style="height:25px; width:550px">
 <div>
-<input type="text" name="collection" placeholder="CollectionID here">
+<input type="text" name="collection" placeholder="Collection ID ">
 <div>
-<input type="submit" value=" submit">
-<div>
-<a href=/> back to the menu  </a>
-<div>
+<input type="submit" value=" Upload">
+<br>
 {{if .}}
 <h2>successfully created collection: {{.}}</h2>
 {{end}}
+<br>
+<a href=/list-collections> see collections  </a>
+<div>
+<a href=/delete-collection> delete collection  </a>
+<div>
+<br>
+<a href=/> menu  </a>
+<div>

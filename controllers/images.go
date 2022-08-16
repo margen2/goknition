@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 	"text/template"
 
 	"github.com/margen2/goknition/api"
@@ -29,9 +31,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Data(w http.ResponseWriter, r *http.Request) {
+func SearchImages(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		err := tpl.ExecuteTemplate(w, "data.gohtml", nil)
+		err := tpl.ExecuteTemplate(w, "images.gohtml", nil)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -89,100 +91,7 @@ func Data(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "query", http.StatusSeeOther)
 }
 
-func CreateCollection(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		err := tpl.ExecuteTemplate(w, "collections.gohtml", nil)
-		if err != nil {
-			return
-		}
-		return
-	}
-
-	faces, err := data.LoadFaces(r.FormValue("ids"))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	db, err := db.ConnectDB()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer db.Close()
-
-	repositorie := repositories.NewImagesRepositorie(db)
-
-	for _, face := range faces {
-		imageID, err := repositorie.CreateImage(face.Image)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		err = repositorie.CreateFace(face, imageID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-
-	collectionID := r.FormValue("collection")
-	err = api.PrepareCollection(collectionID, faces)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = tpl.ExecuteTemplate(w, "collections.gohtml", collectionID)
-	if err != nil {
-		return
-	}
-}
-
-func GetCollections(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	collections, err := api.ListCollections()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = tpl.ExecuteTemplate(w, "list-collections.gohtml", collections)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
-func DeleteCollection(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		err := tpl.ExecuteTemplate(w, "delete-collection.gohtml", nil)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		return
-	}
-
-	collectionID := r.FormValue("collection")
-	err := api.DeleteCollection(collectionID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = tpl.ExecuteTemplate(w, "delete-collection.gohtml", collectionID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
-func Query(w http.ResponseWriter, r *http.Request) {
+func GetMatches(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		err := tpl.ExecuteTemplate(w, "query.gohtml", nil)
 		if err != nil {
@@ -215,7 +124,7 @@ func Query(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func NoMatch(w http.ResponseWriter, r *http.Request) {
+func GetNoMatches(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
@@ -240,4 +149,48 @@ func NoMatch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func Pricing(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		err := tpl.ExecuteTemplate(w, "pricing.gohtml", nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+
+	faces, err := strconv.Atoi(r.FormValue("faces"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	images, err := strconv.Atoi(r.FormValue("images"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	facesn := fmt.Sprintf("Faces: %d * 0.001 = $%.2f ", faces, float64(faces)*0.001)
+	imagesn := fmt.Sprintf("Images: %d * 0.001 = $%.2f ", images, float64(images)*0.001)
+	cost := fmt.Sprintf("Total: %.2f + %.2f = $%.2f",
+		float64(faces)*0.001, float64(images)*0.001, (float64(faces)*0.001)+(float64(images)*0.001))
+
+	result := struct {
+		Faces  string
+		Images string
+		Cost   string
+	}{
+		facesn,
+		imagesn,
+		cost,
+	}
+
+	err = tpl.ExecuteTemplate(w, "pricing.gohtml", result)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
 }

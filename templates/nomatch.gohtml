@@ -2,8 +2,13 @@
 <div>
 <a href=/query> make a query </a>
 <div>
-<a href=/> back to the menu  </a>
+<br>
+<a href=/> menu  </a>
 <div>
+{{if .}}
 {{range .}}
 <h2>{{.Path}}\{{.FileName}}.JPG</h2>
+{{end}}
+{{else}}
+<h2>No images found</h2>
 {{end}}
