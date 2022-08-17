@@ -7,17 +7,17 @@ import (
 	"github.com/margen2/goknition/models"
 )
 
-// Image represent a pointer to type sql.DB
+// Image represent a pointer to type sql.DB.
 type Images struct {
 	db *sql.DB
 }
 
-// NewImagesRepositorie returns a pointer to type Images that allows database methods
+// NewImagesRepositorie returns a pointer to type Images that allows database methods.
 func NewImagesRepositorie(db *sql.DB) *Images {
 	return &Images{db}
 }
 
-// CreateFace inserts a face value into the database
+// CreateFace inserts a face value into the database.
 func (repositorie Images) CreateFace(face models.Face, imageID uint64) error {
 	statement, err := repositorie.db.Prepare("INSERT INTO faces(face_id, image_id) values(?, ?)")
 	if err != nil {
@@ -33,7 +33,7 @@ func (repositorie Images) CreateFace(face models.Face, imageID uint64) error {
 	return nil
 }
 
-// CreateImage inserts a image value into the database
+// CreateImage inserts a image value into the database.
 func (repositorie Images) CreateImage(image models.Image) (uint64, error) {
 	statement, err := repositorie.db.Prepare("INSERT INTO images(file_name, image_path) values (?, ?)")
 	if err != nil {
@@ -53,7 +53,7 @@ func (repositorie Images) CreateImage(image models.Image) (uint64, error) {
 	return uint64(lastInsertedId), nil
 }
 
-// CreateMatch inserts a match between a face and a image into the database
+// CreateMatch inserts a match between a face and a image into the database.
 func (repositorie Images) CreateMatch(faceID string, imageID string) error {
 	statement, err := repositorie.db.Prepare(`
 	INSERT INTO matches(face_id, image_id)
@@ -72,7 +72,7 @@ func (repositorie Images) CreateMatch(faceID string, imageID string) error {
 	return nil
 }
 
-// GetMatches queries the database for all the entries on the matches tables
+// GetMatches queries the database for all the entries on the matches tables.
 func (repositorie Images) GetMatches(faceID string) ([]models.Image, error) {
 	lines, err := repositorie.db.Query(`
 	SELECT i.file_name, i.image_path FROM matches m
@@ -99,7 +99,7 @@ func (repositorie Images) GetMatches(faceID string) ([]models.Image, error) {
 	return images, nil
 }
 
-// CreateNoMatch inserts a image into the no_match table
+// CreateNoMatch inserts a image into the no_match table.
 func (repositorie Images) CreateNoMatch(fileName string) error {
 	statement, err := repositorie.db.Prepare(`
 	INSERT INTO nomatches(image_id)
@@ -117,7 +117,7 @@ func (repositorie Images) CreateNoMatch(fileName string) error {
 	return nil
 }
 
-// GetNoMatches queries the database for all the entries on the no_matches table
+// GetNoMatches returns all the entries on the no_matches table
 func (repositorie Images) GetNoMatches() ([]models.Image, error) {
 	lines, err := repositorie.db.Query(`SELECT i.file_name, i.image_path FROM nomatches nm 
 	INNER JOIN images i ON  nm.image_id = i.id`)
@@ -139,4 +139,26 @@ func (repositorie Images) GetNoMatches() ([]models.Image, error) {
 	}
 
 	return images, nil
+}
+
+// GetFaceIDs returns all of the face_id entries from the faces table.
+func (repositorie Images) GetFaceIDs() ([]models.Face, error) {
+	lines, err := repositorie.db.Query(`SELECT face_id FROM faces`)
+	if err != nil {
+		return nil, fmt.Errorf("getfaceids/db.query: %w", err)
+	}
+	defer lines.Close()
+
+	var faces []models.Face
+	for lines.Next() {
+		var face models.Face
+		if err := lines.Scan(
+			&face.ID,
+		); err != nil {
+			return nil, fmt.Errorf("getfacesIDs/lines.scan: %w", err)
+		}
+		faces = append(faces, face)
+	}
+
+	return faces, nil
 }

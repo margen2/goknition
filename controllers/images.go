@@ -18,6 +18,8 @@ func init() {
 	tpl = template.Must(template.ParseGlob("templates/*.gohtml"))
 }
 
+//Index serves all the routes that aren't already being served by another function.
+//It serves the menu for Goknition.
 func Index(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not Allowed", http.StatusMethodNotAllowed)
@@ -31,6 +33,8 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//SearchImages serves the images route. It uploads all the files in the specified images
+//folder to the Rekognition API and stores the result in the database.
 func SearchImages(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		err := tpl.ExecuteTemplate(w, "images.gohtml", nil)
@@ -41,7 +45,7 @@ func SearchImages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	images, err := data.Load(r.FormValue("files"))
+	images, err := data.Loadimages(r.FormValue("files"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -88,9 +92,10 @@ func SearchImages(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	http.Redirect(w, r, "query", http.StatusSeeOther)
+	http.Redirect(w, r, "get-matches", http.StatusSeeOther)
 }
 
+//Getmatches serves the get-matches route to return all of the images based on the given Face ID
 func GetMatches(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		err := tpl.ExecuteTemplate(w, "query.gohtml", nil)
@@ -124,6 +129,7 @@ func GetMatches(w http.ResponseWriter, r *http.Request) {
 
 }
 
+//GetNoMatches serves the no-match route to return all of the images without a matching face.
 func GetNoMatches(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -151,6 +157,7 @@ func GetNoMatches(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//Pricing serves the pricing route to give an estimate on the pricing based on the amount of requests.
 func Pricing(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		err := tpl.ExecuteTemplate(w, "pricing.gohtml", nil)
@@ -193,4 +200,51 @@ func Pricing(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
+}
+
+//SaveMatches serves the save-matches route to save all of the image matches on the given path.
+func SaveMatches(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		err := tpl.ExecuteTemplate(w, "save-matches.gohtml", nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+
+	db, err := db.ConnectDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	repositorie := repositories.NewImagesRepositorie(db)
+	faces, err := repositorie.GetFaceIDs()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	path := r.FormValue("path")
+	for _, face := range faces {
+		images, err := repositorie.GetMatches(face.ID)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = data.CopyImages(face.ID, path, images)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	err = tpl.ExecuteTemplate(w, "save-matches.gohtml", path)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

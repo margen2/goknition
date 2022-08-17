@@ -1,0 +1,14 @@
+<h1>Save matches</h1>
+<p> Saves all of the matches to given path>
+<form method="post">
+<input type="text" name="path" placeholder="Path to copy folder" style="height:25px; width:550px">
+<input type="submit">
+<div>
+<br>
+<a href=/> menu  </a>
+<br>
+<br>
+{{if .}}
+<h2>matches saved at: {{.}}</h2>
+{{end}}
+    

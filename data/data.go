@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,18 +46,18 @@ func LoadFaces(path string) ([]models.Face, error) {
 
 var images []models.Image
 
-func loadImages(path string) error {
+func getImages(path string) error {
 	dirs, err := os.ReadDir(path)
 	if err != nil {
-		return fmt.Errorf("loadimages/os.readdir: %w", err)
+		return fmt.Errorf("getimages/os.readdir: %w", err)
 	}
 
 	for _, dir := range dirs {
 		if dir.IsDir() {
 			path := filepath.Join(path, dir.Name())
-			err = loadImages(path)
+			err = getImages(path)
 			if err != nil {
-				return fmt.Errorf("loadimages/range dirs: %w", err)
+				return fmt.Errorf("getimages/range dirs: %w", err)
 			}
 			continue
 		}
@@ -67,10 +68,10 @@ func loadImages(path string) error {
 	return nil
 }
 
-// Load receives a path to an images folder. It returns a slice of type Image
+// loadimages receives a path to an images folder. It returns a slice of type Image
 // with all of the images in the corresponding path.
-func Load(imagesPath string) ([]models.Image, error) {
-	err := loadImages(imagesPath)
+func Loadimages(imagesPath string) ([]models.Image, error) {
+	err := getImages(imagesPath)
 	if err != nil {
 		return nil, fmt.Errorf("load: %w", err)
 	}
@@ -79,4 +80,40 @@ func Load(imagesPath string) ([]models.Image, error) {
 	}()
 
 	return images, nil
+}
+
+// CopyImages copies all the given images to the specified path.
+func CopyImages(faceID, copy string, images []models.Image) error {
+
+	err := os.Mkdir(copy+`\`+faceID, fs.ModeDir)
+	if err != nil {
+		return fmt.Errorf("os.writefile: %w", err)
+	}
+
+	for _, image := range images {
+		imageFile := image.FileName + ".JPG"
+		fl, err := os.Open(image.Path + `\` + imageFile)
+		if err != nil {
+			return fmt.Errorf("os.open: %w", err)
+		}
+		defer fl.Close()
+
+		fs, err := fl.Stat()
+		if err != nil {
+			return fmt.Errorf("fl.stat: %w", err)
+		}
+
+		b := make([]byte, fs.Size())
+		n, err := fl.Read(b)
+		if n < 1 || err != nil {
+			return fmt.Errorf("no bytes read or err fl.read: %w", err)
+		}
+
+		err = os.WriteFile(copy+`\`+faceID+`\`+imageFile, b, 0666)
+		if err != nil {
+			return fmt.Errorf("os.writefile: %w", err)
+		}
+	}
+
+	return nil
 }
