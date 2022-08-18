@@ -2,38 +2,7 @@
 
 Goknition is a Go application that uses the Amazon Rekognition API to organize images. It searches for a given collection of faces inside each image and returns a list of matches between them.
   
-# How to use:  
-
-## File structure:  
-
-
-The files are expected to be distributed as follows:    
-
-<pre>      
-│
-├──IDs                   
-│  ├──ID1
-│  │  └──file1.JPG   
-│  ├──ID2
-│  │  └──file2.JPG
-│  └──ID3
-│     └──file2.JPG
-│
-└── DATA
-    ├──folder1
-    │    └──subfolder
-    │        └──file1.JPG     
-    ├──folder2
-    │  │──file2.JPG
-    │  │──file3.JPG
-    │  └──file4.JPG
-    └──folder3
-       └──file5.JPG 
-</pre>  
-  
-
-The IDs folder **Must** be organized as shown here. Each subfolder's name will be used to query for a particular face. The Data folder doesn't have those same restrictions as any file inside it will be saved, and the filename (without the extension) will be the image ID.
-
+# Instalation:  
 
 ## AWS config:  
 
@@ -61,3 +30,43 @@ Enter the following command on the MySQL monitor:
 `$ go run main.go`  
   
 Now open your browser on http://localhost:8080/
+ 
+# How to use:
+
+## File structure:  
+
+The files are expected to be distributed as follows:    
+
+<pre>      
+│
+├──IDs                   
+│  ├──ID1
+│  │  └──file1.JPG   
+│  ├──ID2
+│  │  └──file2.JPG
+│  └──ID3
+│     └──file2.JPG
+│
+└── DATA
+    ├──folder1
+    │    └──subfolder
+    │        └──file1.JPG     
+    ├──folder2
+    │  │──file2.JPG
+    │  │──file3.JPG
+    │  └──file4.JPG
+    └──folder3
+       └──file5.JPG 
+</pre>  
+  
+
+The IDs folder **Must** be organized as shown here. Each subfolder's name will be used to query for a particular face. The Data folder doesn't have those same restrictions as any file inside it will be saved, and the filename (without the extension) will be the image ID. 
+
+## Creating a collection: 
+To create a Rekognition face collection, select the "Create collection" option on the menu. This collection will hold all the faces you want to identify inside each image. Paste the IDs folder and create a name for the collection. 
+
+## Uploading images:
+Select the "Upload images" option and paste the path to the DATA folder with the name of the collection that you want to use.
+
+## Results:
+After uploading your images, you can search by a specific face by selecting the  "Make a query" option, or you can save all of the matches inside another folder using the "Save matches" option.
