@@ -40,9 +40,8 @@ func getImageBytes(filePath string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("getimagebytes/fl.stat: %w", err)
 	}
-	var size int64 = fileInfo.Size()
-	b := make([]byte, size)
 
+	b := make([]byte, fileInfo.Size())
 	n, err := fl.Read(b)
 	if err != nil || n == 0 {
 		return nil, fmt.Errorf("getimagebytes/fl.read: %w", err)
@@ -74,11 +73,12 @@ func indexFaces(svc *rekognition.Rekognition, collectionId string, faces []model
 	return nil
 }
 
-func searchFaces(svc *rekognition.Rekognition, image models.Image, collectionId string) (*rekognition.SearchFacesByImageOutput, error) {
+func searchFaces(svc *rekognition.Rekognition, image models.Image, collectionId string,
+	matchC chan models.Match, errC chan error, noMatchC chan models.Image) {
 
 	imageAWS, err := newImageAWS(image.Path + `\` + image.FileName + ".JPG")
 	if err != nil {
-		return nil, fmt.Errorf("searchfaces: %w", err)
+		errC <- fmt.Errorf("newimageaws: %w", err)
 	}
 
 	input := &rekognition.SearchFacesByImageInput{
@@ -90,9 +90,18 @@ func searchFaces(svc *rekognition.Rekognition, image models.Image, collectionId 
 
 	result, err := svc.SearchFacesByImage(input)
 	if err != nil {
-		return nil, fmt.Errorf("searchfaces/svc.searchfacesbyimage: %w", err)
+		errC <- fmt.Errorf("svc.searchfacesbyimage: %w", err)
 	}
-	return result, nil
+
+	match := models.Match{image, nil}
+	if len(result.FaceMatches) > 0 {
+		for _, fm := range result.FaceMatches {
+			match.FaceIDs = append(match.FaceIDs, *fm.Face.ExternalImageId)
+		}
+		matchC <- match
+	} else {
+		noMatchC <- image
+	}
 }
 
 func createCollection(svc *rekognition.Rekognition, collectionId string) error {

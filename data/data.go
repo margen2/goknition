@@ -73,10 +73,10 @@ func getImages(path string) error {
 func Loadimages(imagesPath string) ([]models.Image, error) {
 	err := getImages(imagesPath)
 	if err != nil {
-		return nil, fmt.Errorf("load: %w", err)
+		return nil, fmt.Errorf("loadimages: %w", err)
 	}
 	defer func() {
-		images = images[cap(images):]
+		images = nil
 	}()
 
 	return images, nil

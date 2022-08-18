@@ -10,28 +10,28 @@ import (
 
 // Getmatches receives a list of images and returns all of the matches found using the specified collections.
 func GetMatches(images []models.Image, collectionID string) ([]models.Match, []models.Image, error) {
-	svc := newClient()
+	errorC := make(chan error)
+	matchC := make(chan models.Match)
+	noMatchC := make(chan models.Image)
 
+	svc := newClient()
+	for _, image := range images {
+		go searchFaces(svc, image, collectionID, matchC, errorC, noMatchC)
+	}
+	fmt.Printf("started all of the  %d images\n", len(images)-1)
+
+	l := len(images)
 	var matches []models.Match
 	var nomatches []models.Image
-	l := len(images) - 1
-
-	for i, image := range images {
-		fmt.Printf("image N°%d out of %d\n", i, l)
-		result, err := searchFaces(svc, image, collectionID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("getmatches: %w", err)
+	for i := 0; i < l; i++ {
+		select {
+		case match := <-matchC:
+			matches = append(matches, match)
+		case noMatch := <-noMatchC:
+			nomatches = append(nomatches, noMatch)
+		case err := <-errorC:
+			return nil, nil, err
 		}
-
-		match := models.Match{image, nil}
-		if len(result.FaceMatches) > 0 {
-			for _, fm := range result.FaceMatches {
-				match.FaceIDs = append(match.FaceIDs, *fm.Face.ExternalImageId)
-			}
-		} else {
-			nomatches = append(nomatches, image)
-		}
-		matches = append(matches, match)
 	}
 
 	return matches, nomatches, nil
