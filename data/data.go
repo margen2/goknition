@@ -5,7 +5,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/margen2/goknition/models"
 )
@@ -33,9 +32,8 @@ func LoadFaces(path string) ([]models.Face, error) {
 			}
 
 			fl := fls[0]
-			imageID := strings.Split(fl.Name(), ".")[0]
 			faces = append(faces, models.Face{
-				ID, models.Image{imageID, filePath}})
+				0, ID, models.Image{0, fl.Name(), filePath}})
 
 			continue
 		}
@@ -49,7 +47,7 @@ var images []models.Image
 func getImages(path string) error {
 	dirs, err := os.ReadDir(path)
 	if err != nil {
-		return fmt.Errorf("getimages/os.readdir: %w", err)
+		return fmt.Errorf("os.readdir: %w", err)
 	}
 
 	for _, dir := range dirs {
@@ -57,12 +55,11 @@ func getImages(path string) error {
 			path := filepath.Join(path, dir.Name())
 			err = getImages(path)
 			if err != nil {
-				return fmt.Errorf("getimages/range dirs: %w", err)
+				return fmt.Errorf("getimages: %w", err)
 			}
 			continue
 		}
-		imageID := strings.Split(dir.Name(), ".")[0]
-		images = append(images, models.Image{imageID, path})
+		images = append(images, models.Image{0, dir.Name(), path})
 	}
 
 	return nil
@@ -73,7 +70,7 @@ func getImages(path string) error {
 func Loadimages(imagesPath string) ([]models.Image, error) {
 	err := getImages(imagesPath)
 	if err != nil {
-		return nil, fmt.Errorf("loadimages: %w", err)
+		return nil, fmt.Errorf("getimages: %w", err)
 	}
 	defer func() {
 		images = nil
@@ -91,8 +88,7 @@ func CopyImages(faceID, copy string, images []models.Image) error {
 	}
 
 	for _, image := range images {
-		imageFile := image.FileName + ".JPG"
-		fl, err := os.Open(image.Path + `\` + imageFile)
+		fl, err := os.Open(image.Path + `\` + image.Filename)
 		if err != nil {
 			return fmt.Errorf("os.open: %w", err)
 		}
@@ -109,7 +105,7 @@ func CopyImages(faceID, copy string, images []models.Image) error {
 			return fmt.Errorf("no bytes read or err fl.read: %w", err)
 		}
 
-		err = os.WriteFile(copy+`\`+faceID+`\`+imageFile, b, 0666)
+		err = os.WriteFile(copy+`\`+faceID+`\`+image.Filename, b, 0666)
 		if err != nil {
 			return fmt.Errorf("os.writefile: %w", err)
 		}

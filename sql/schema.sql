@@ -2,10 +2,19 @@ CREATE DATABASE IF NOT EXISTS goknition;
 
 USE goknition;
 
+CREATE TABLE IF NOT EXISTS collections(
+    id INT auto_increment PRIMARY KEY,
+    name varchar(20) UNIQUE NOT NULL
+) ENGINE=INNODB; 
+
+
 CREATE TABLE IF NOT EXISTS images (
     id INT auto_increment PRIMARY KEY,
     file_name VARCHAR(20) NOT NULL,
-    image_path VARCHAR(150) NOT NULL
+    image_path VARCHAR(150) NOT NULL,
+    collection_id INT NOT NULL, 
+    FOREIGN KEY (collection_id) 
+    REFERENCES collections(id)
 ) ENGINE=INNODB;
 
 
@@ -31,4 +40,3 @@ CREATE TABLE IF NOT EXISTS nomatches(
     FOREIGN KEY (image_id)
     REFERENCES images(id)
 ) ENGINE=INNODB; 
-

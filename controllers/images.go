@@ -59,17 +59,23 @@ func SearchImages(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	repositorie := repositories.NewImagesRepositorie(db)
+	collection := r.FormValue("collection")
+	collectionID, err := repositorie.GetCollectionID(collection)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	for _, image := range images {
-		_, err := repositorie.CreateImage(image)
+	for i, image := range images {
+		ID, err := repositorie.CreateImage(image, int(collectionID))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		images[i].ID = ID
 	}
 
-	collectionID := r.FormValue("collection")
-	matches, nomatches, err := api.GetMatches(images, collectionID)
+	matches, nomatches, err := api.GetMatches(images, collection)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -77,7 +83,7 @@ func SearchImages(w http.ResponseWriter, r *http.Request) {
 
 	for _, match := range matches {
 		for _, ID := range match.FaceIDs {
-			err = repositorie.CreateMatch(ID, match.Image.FileName)
+			err = repositorie.CreateMatch(ID, match.Image.ID)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -86,7 +92,7 @@ func SearchImages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, nomatch := range nomatches {
-		err := repositorie.CreateNoMatch(nomatch.FileName)
+		err := repositorie.CreateNoMatch(nomatch.ID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -98,7 +104,7 @@ func SearchImages(w http.ResponseWriter, r *http.Request) {
 //Getmatches serves the get-matches route to return all of the images based on the given Face ID
 func GetMatches(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		err := tpl.ExecuteTemplate(w, "query.gohtml", nil)
+		err := tpl.ExecuteTemplate(w, "get-matches.gohtml", nil)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -115,13 +121,14 @@ func GetMatches(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	repositorie := repositories.NewImagesRepositorie(db)
+
 	images, err := repositorie.GetMatches(query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = tpl.ExecuteTemplate(w, "query.gohtml", images)
+	err = tpl.ExecuteTemplate(w, "get-matches.gohtml", images)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -150,7 +157,7 @@ func GetNoMatches(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tpl.ExecuteTemplate(w, "nomatch.gohtml", images)
+	err = tpl.ExecuteTemplate(w, "no-match.gohtml", images)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -180,9 +187,9 @@ func Pricing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	facesn := fmt.Sprintf("Faces: %d * 0.001 = $%.2f ", faces, float64(faces)*0.001)
-	imagesn := fmt.Sprintf("Images: %d * 0.001 = $%.2f ", images, float64(images)*0.001)
-	cost := fmt.Sprintf("Total: %.2f + %.2f = $%.2f",
+	facesn := fmt.Sprintf("Faces: %d * 0.001 = $%.3f ", faces, float64(faces)*0.001)
+	imagesn := fmt.Sprintf("Images: %d * 0.001 = $%.3f ", images, float64(images)*0.001)
+	cost := fmt.Sprintf("Total: %.3f + %.3f = $%.3f",
 		float64(faces)*0.001, float64(images)*0.001, (float64(faces)*0.001)+(float64(images)*0.001))
 
 	result := struct {
@@ -220,7 +227,14 @@ func SaveMatches(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repositorie := repositories.NewImagesRepositorie(db)
-	faces, err := repositorie.GetFaceIDs()
+	collection := r.FormValue("collection")
+	collectionID, err := repositorie.GetCollectionID(collection)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	faces, err := repositorie.GetFaceIDs(collectionID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -228,14 +242,15 @@ func SaveMatches(w http.ResponseWriter, r *http.Request) {
 
 	path := r.FormValue("path")
 	for _, face := range faces {
-		images, err := repositorie.GetMatches(face.ID)
+		fmt.Println("printin faces", face.FaceID)
+		images, err := repositorie.GetMatches(face.FaceID)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		err = data.CopyImages(face.ID, path, images)
+		err = data.CopyImages(face.FaceID, path, images)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -15,6 +15,7 @@ func CreateCollection(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		err := tpl.ExecuteTemplate(w, "collections.gohtml", nil)
 		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		return
@@ -32,30 +33,36 @@ func CreateCollection(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
+	collection := r.FormValue("collection")
 	repositorie := repositories.NewImagesRepositorie(db)
-
-	for _, face := range faces {
-		imageID, err := repositorie.CreateImage(face.Image)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		err = repositorie.CreateFace(face, imageID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-
-	collectionID := r.FormValue("collection")
-	err = api.PrepareCollection(collectionID, faces)
+	collectionID, err := repositorie.CreateCollection(collection)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = tpl.ExecuteTemplate(w, "collections.gohtml", collectionID)
+	for i, face := range faces {
+		imageID, err := repositorie.CreateImage(face.Image, int(collectionID))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		FaceID, err := repositorie.CreateFace(face.FaceID, imageID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		faces[i].ID = FaceID
+	}
+
+	err = api.PrepareCollection(collection, faces)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = tpl.ExecuteTemplate(w, "collections.gohtml", collection)
 	if err != nil {
 		return
 	}

@@ -3,8 +3,10 @@ package api
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rekognition"
 	"github.com/margen2/goknition/models"
@@ -13,7 +15,7 @@ import (
 func newImageAWS(path string) (*rekognition.Image, error) {
 	b, err := getImageBytes(path)
 	if err != nil {
-		return nil, fmt.Errorf("newimageaws: %w", err)
+		return nil, fmt.Errorf("getimagebytes: %w", err)
 	}
 	return &rekognition.Image{
 		Bytes: b,
@@ -32,19 +34,19 @@ func newClient() *rekognition.Rekognition {
 func getImageBytes(filePath string) ([]byte, error) {
 	fl, err := os.Open(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("getimagebytes/os.open: %w", err)
+		return nil, fmt.Errorf("os.open: %w", err)
 	}
 	defer fl.Close()
 
 	fileInfo, err := fl.Stat()
 	if err != nil {
-		return nil, fmt.Errorf("getimagebytes/fl.stat: %w", err)
+		return nil, fmt.Errorf("fl.stat: %w", err)
 	}
 
 	b := make([]byte, fileInfo.Size())
 	n, err := fl.Read(b)
 	if err != nil || n == 0 {
-		return nil, fmt.Errorf("getimagebytes/fl.read: %w", err)
+		return nil, fmt.Errorf("fl.read: %w", err)
 	}
 
 	return b, nil
@@ -53,21 +55,21 @@ func getImageBytes(filePath string) ([]byte, error) {
 func indexFaces(svc *rekognition.Rekognition, collectionId string, faces []models.Face) error {
 
 	for _, face := range faces {
-		imageAWS, err := newImageAWS(face.Image.Path + `\` + face.Image.FileName + ".JPG")
+		imageAWS, err := newImageAWS(face.Image.Path + `\` + face.Image.Filename)
 		if err != nil {
-			return fmt.Errorf("indexfaces: %w", err)
+			return fmt.Errorf("newimageaws: %w", err)
 		}
 
 		input := &rekognition.IndexFacesInput{
 			CollectionId:    aws.String(collectionId),
 			Image:           imageAWS,
-			ExternalImageId: aws.String(face.ID),
+			ExternalImageId: aws.String(strconv.Itoa(int(face.ID))),
 			MaxFaces:        aws.Int64(1),
 		}
-
+		
 		_, err = svc.IndexFaces(input)
 		if err != nil {
-			return fmt.Errorf("indexcollection/svc.indexfaces: %w", err)
+			return fmt.Errorf("svc.indexfaces: %w", err)
 		}
 	}
 	return nil
@@ -76,7 +78,7 @@ func indexFaces(svc *rekognition.Rekognition, collectionId string, faces []model
 func searchFaces(svc *rekognition.Rekognition, image models.Image, collectionId string,
 	matchC chan models.Match, errC chan error, noMatchC chan models.Image) {
 
-	imageAWS, err := newImageAWS(image.Path + `\` + image.FileName + ".JPG")
+	imageAWS, err := newImageAWS(image.Path + `\` + image.Filename)
 	if err != nil {
 		errC <- fmt.Errorf("newimageaws: %w", err)
 	}
@@ -89,14 +91,24 @@ func searchFaces(svc *rekognition.Rekognition, image models.Image, collectionId 
 	}
 
 	result, err := svc.SearchFacesByImage(input)
-	if err != nil {
-		errC <- fmt.Errorf("svc.searchfacesbyimage: %w", err)
+	if aerr, ok := err.(awserr.Error); ok {
+		switch aerr.Code() {
+		case rekognition.ErrCodeInvalidParameterException:
+			//do nothing
+		default:
+			errC <- fmt.Errorf("svc.searchfacesbyimage: %w", err)
+			return
+		}
 	}
 
 	match := models.Match{image, nil}
 	if len(result.FaceMatches) > 0 {
 		for _, fm := range result.FaceMatches {
-			match.FaceIDs = append(match.FaceIDs, *fm.Face.ExternalImageId)
+			FaceID, err := strconv.ParseUint(*fm.Face.ExternalImageId, 10, 64)
+			if err != nil {
+				errC <- fmt.Errorf("strconv.atoi: %w", err)
+			}
+			match.FaceIDs = append(match.FaceIDs, FaceID)
 		}
 		matchC <- match
 	} else {
@@ -112,7 +124,7 @@ func createCollection(svc *rekognition.Rekognition, collectionId string) error {
 
 	_, err := svc.CreateCollection(input)
 	if err != nil {
-		return fmt.Errorf("createcollection: %w", err)
+		return fmt.Errorf("svc.createcollection: %w", err)
 	}
 	return nil
 }

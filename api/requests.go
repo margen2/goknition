@@ -18,7 +18,6 @@ func GetMatches(images []models.Image, collectionID string) ([]models.Match, []m
 	for _, image := range images {
 		go searchFaces(svc, image, collectionID, matchC, errorC, noMatchC)
 	}
-	fmt.Printf("started all of the  %d images\n", len(images)-1)
 
 	l := len(images)
 	var matches []models.Match
