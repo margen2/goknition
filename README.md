@@ -21,7 +21,7 @@ API_PORT=8080
 
 Enter the following command on the MySQL monitor:  
 `
-\. your\path\to\github.com\margen2\goknition\sql\sql.sql
+\. your\path\to\github.com\margen2\goknition\sql\schema.sql
 `  
 
 ## Cloning the repository:  
@@ -60,13 +60,13 @@ The files are expected to be distributed as follows:
 </pre>  
   
 
-The IDs folder **Must** be organized as shown here. Each subfolder's name will be used to query for a particular face. The Data folder doesn't have those same restrictions as any file inside it will be saved, and the filename (without the extension) will be the image ID. 
+The IDs folder **Must** be organized as shown here. Each subfolder's name will be used to query for a particular face. The Data folder doesn't have those same restrictions as any file inside it will be saved. 
 
 ## Creating a collection: 
-To create a Rekognition face collection, select the "Create collection" option on the menu. This collection will hold all the faces you want to identify inside each image. Paste the IDs folder and create a name for the collection. 
+A Rekognition face collection will hold all the faces you want to identify in the DATA folder. To create one, select the "Create collection" option on the menu and insert the path to the IDs folder and a name for the collection. 
 
 ## Uploading images:
-Select the "Upload images" option and paste the path to the DATA folder with the name of the collection that you want to use.
+To search for faces inside an image, select the "Upload images" option and insert the path to the DATA folder with the name of the collection you want to use.
 
 ## Results:
-After uploading your images, you can search by a specific face by selecting the  "Make a query" option, or you can save all of the matches inside another folder using the "Save matches" option.
+After uploading your images, you can search by a specific face by selecting the "Make a query" option, or you can save all of the matches inside another folder using the "Save matches" option.
