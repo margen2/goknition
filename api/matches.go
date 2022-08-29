@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"path/filepath"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -21,18 +22,21 @@ type result struct {
 
 // Getmatches receives a list of images and returns all of the matches found using the specified collection.
 func GetMatches(images []models.Image, collectionID string) ([]models.Match, []models.Image, error) {
-	errorC := make(chan error)
-	requestC := make(chan request)
-	resultC := make(chan result)
-
 	l := len(images)
-	for i := 0; i < l; i++ {
-		svc := newClient()
+	errorC := make(chan error, l)
+	requestC := make(chan request, l)
+	resultC := make(chan result, l)
+
+	//50 is the default number of requests per second for the Rekognition API.
+	//If you ask for a limit increase, you need to increase the number of workers accordingly.
+	const workers = 50
+	svc := newClient()
+	for i := 0; i < workers; i++ {
 		go searchFaces(svc, requestC, resultC, errorC)
 	}
 
 	for _, image := range images {
-		imageAWS, err := newImageAWS(image.Path + `\` + image.Filename)
+		imageAWS, err := newImageAWS(filepath.Join(image.Path, image.Filename))
 		if err != nil {
 			return nil, nil, fmt.Errorf("newimageaws: %w", err)
 		}
@@ -43,7 +47,6 @@ func GetMatches(images []models.Image, collectionID string) ([]models.Match, []m
 			Image:              imageAWS,
 			MaxFaces:           aws.Int64(5),
 		}
-
 		requestC <- request{image, input}
 	}
 
@@ -62,37 +65,37 @@ func GetMatches(images []models.Image, collectionID string) ([]models.Match, []m
 			return nil, nil, err
 		}
 	}
-	close(requestC)
 
 	return matches, nomatches, nil
 }
 
 func searchFaces(svc *rekognition.Rekognition, requestsC chan request, resultC chan result, errC chan error) {
-	r := <-requestsC
-	res, err := svc.SearchFacesByImage(r.input)
+	for r := range requestsC {
+		res, err := svc.SearchFacesByImage(r.input)
 
-	if aerr, ok := err.(awserr.Error); ok {
-		switch aerr.Code() {
-		case rekognition.ErrCodeInvalidParameterException:
-			//do nothing
-		default:
-			errC <- fmt.Errorf("svc.searchfacesbyimage: %w", err)
-			return
-		}
-	}
-
-	match := models.Match{r.image, nil}
-	if len(res.FaceMatches) > 0 {
-		for _, fm := range res.FaceMatches {
-			FaceID, err := strconv.ParseUint(*fm.Face.ExternalImageId, 10, 64)
-			if err != nil {
-				errC <- fmt.Errorf("strconv.atoi: %w", err)
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case rekognition.ErrCodeInvalidParameterException:
+				//do nothing
+			default:
+				errC <- fmt.Errorf("svc.searchfacesbyimage: %w", err)
 				return
 			}
-			match.FaceIDs = append(match.FaceIDs, FaceID)
 		}
-		resultC <- result{match, models.Image{}}
-	} else {
-		resultC <- result{match, r.image}
+
+		match := models.Match{r.image, nil}
+		if len(res.FaceMatches) > 0 {
+			for _, fm := range res.FaceMatches {
+				FaceID, err := strconv.ParseUint(*fm.Face.ExternalImageId, 10, 64)
+				if err != nil {
+					errC <- fmt.Errorf("strconv.parseuint: %w", err)
+					return
+				}
+				match.FaceIDs = append(match.FaceIDs, FaceID)
+			}
+			resultC <- result{match, models.Image{}}
+		} else {
+			resultC <- result{match, r.image}
+		}
 	}
 }
