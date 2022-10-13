@@ -13,7 +13,7 @@ import (
 // and index all of the faces in the IDs folder to it.
 func CreateCollection(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		err := tpl.ExecuteTemplate(w, "collections.gohtml", nil)
+		err := tpl.ExecuteTemplate(w, "collections.html", nil)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -62,7 +62,7 @@ func CreateCollection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tpl.ExecuteTemplate(w, "collections.gohtml", collection)
+	err = tpl.ExecuteTemplate(w, "collections.html", collection)
 	if err != nil {
 		return
 	}
@@ -82,7 +82,7 @@ func GetCollections(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tpl.ExecuteTemplate(w, "list-collections.gohtml", collections)
+	err = tpl.ExecuteTemplate(w, "list-collections.html", collections)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -93,7 +93,7 @@ func GetCollections(w http.ResponseWriter, r *http.Request) {
 //requested collection from the Rekognition APi.
 func DeleteCollection(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		err := tpl.ExecuteTemplate(w, "delete-collection.gohtml", nil)
+		err := tpl.ExecuteTemplate(w, "delete-collection.html", nil)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -108,7 +108,7 @@ func DeleteCollection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tpl.ExecuteTemplate(w, "delete-collection.gohtml", collectionID)
+	err = tpl.ExecuteTemplate(w, "delete-collection.html", collectionID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
