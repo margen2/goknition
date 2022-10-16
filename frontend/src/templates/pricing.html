@@ -1,0 +1,22 @@
+<div class="container">
+    <h1>Pricing</h1>
+    <p> Please refer to the official <a href=https://aws.amazon.com/rekognition/pricing/?nc1=h_ls> Rekognition calculator </a>for a more accurate result. </p>
+    <a href="/">  menu  </a>
+    <br>
+    <br>
+    <form method="post">
+    <label>N° of faces on the IDs folder:</label>
+    <input type="number" name="faces" min="0"><br>
+    <label>N° of images:</label>
+    <input type="number" name="images" min="0"><br>
+    <input type="submit" value="Calculate">
+    </form>
+    <br>
+    <br>
+    {{if .}}
+    <h2> {{.Faces}} </h2>
+    <h2> {{.Images}}</h2>
+    <br>
+    <h2>{{.Cost}}</h2>
+    {{end}}
+</div>

@@ -1,0 +1,10 @@
+{
+  "name": "gokWails",
+  "outputfilename": "gokWails",
+  "frontend:install": "",
+  "frontend:build": "",
+  "author": {
+    "name": "Margen",
+    "email": "marcelogentil2011@gmail.com"
+  }
+}
