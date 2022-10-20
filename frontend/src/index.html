@@ -20,14 +20,14 @@
     </header>
     <nav class="navbar">
         <ul class="navbar-nav">
-            <li class="nav-item"><a href="#" class="nav-link">Collections</a> </li>
-                <ul class="nav-sub-menu">
+            <li class="nav-item"><a id="collections">Collections</a> </li>
+                <!-- <ul class="nav-sub-menu">
                     <li><a id="create" >Create Collection</a> </li>
                     <li><a id="delete" >Delete Collection</a> </li>
                     <li><a id="list" >List Collections</a> </li>
-                </ul>
-            <li class="nav-item"><a id="images" class="nav-link">Images</a></li>
-            <li class="nav-item"><a href="#" class="nav-link">Results</a></li>
+                </ul> -->
+            <li class="nav-item"><a id="images">Images</a></li>
+            <li class="nav-item"><a href="#" >Results</a></li>
                 <ul class="nav-sub-menu"> 
                     <li><a id="matches">Query Face</a> </li>
                     <li><a id="nomatches">See Nomatches</a> </li>
@@ -36,6 +36,12 @@
         </ul>
     </nav>
   <main>
+    <div>
+        <h2 >Active collection: <span id="active-collection">none</span> </h2>
+    </div>
+    <div class="content">
+
+    </div>
   </main>
     <script src="static/js/collections.js" type="module"></script>
     <script src="static/js/main.js" type="module"></script>

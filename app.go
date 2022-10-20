@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/margen2/goknition/backend/api"
+	"github.com/margen2/goknition/backend/data"
 )
 
 // App struct
@@ -25,6 +26,7 @@ func (a *App) startup(ctx context.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	a.ctx = ctx
 }
 
@@ -45,12 +47,6 @@ func (a *App) shutdown(ctx context.Context) {
 	// Perform your teardown here
 }
 
-// Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
-}
-
-// Greet returns a greeting for the given name
 func (a *App) GetCollections(refresh bool) []string {
 	if refresh {
 		err := api.RefreshCollections()
@@ -60,4 +56,28 @@ func (a *App) GetCollections(refresh bool) []string {
 	}
 
 	return api.ListCollections()
+}
+
+func (a *App) GetCwd() string {
+	cwd, err := data.GetCwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return cwd
+}
+
+func (a *App) ListFolders(folder string) []string {
+	folders, err := data.ListFolders(folder)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return folders
+}
+
+func (a *App) GoBack(folder string) string {
+	fmt.Println(folder)
+	folder = data.GoBack(folder)
+	fmt.Println(folder)
+	return folder
 }

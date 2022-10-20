@@ -6,6 +6,14 @@ export function GetCollections(arg1) {
   return window['go']['main']['App']['GetCollections'](arg1);
 }
 
-export function Greet(arg1) {
-  return window['go']['main']['App']['Greet'](arg1);
+export function GetCwd() {
+  return window['go']['main']['App']['GetCwd']();
+}
+
+export function GoBack(arg1) {
+  return window['go']['main']['App']['GoBack'](arg1);
+}
+
+export function ListFolders(arg1) {
+  return window['go']['main']['App']['ListFolders'](arg1);
 }

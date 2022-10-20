@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"strconv"
+	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rekognition"
@@ -11,7 +11,9 @@ import (
 
 var collectionIDs []string
 
-func createCollection(svc *rekognition.Rekognition, collectionId string) error {
+// CreateCollection
+func CreateCollection(collectionId string) error {
+	svc := newClient()
 
 	input := &rekognition.CreateCollectionInput{
 		CollectionId: aws.String(collectionId),
@@ -24,10 +26,12 @@ func createCollection(svc *rekognition.Rekognition, collectionId string) error {
 	return nil
 }
 
-func indexFaces(svc *rekognition.Rekognition, collectionId string, faces []models.Face) error {
+// IndexFaces
+func IndexFaces(collectionId string, faces []models.Face) error {
+	svc := newClient()
 
 	for _, face := range faces {
-		imageAWS, err := newImageAWS(face.Image.Path + `\` + face.Image.Filename)
+		imageAWS, err := newImageAWS(filepath.Join(face.Image.Path, face.Image.Filename))
 		if err != nil {
 			return fmt.Errorf("newimageaws: %w", err)
 		}
@@ -35,7 +39,7 @@ func indexFaces(svc *rekognition.Rekognition, collectionId string, faces []model
 		input := &rekognition.IndexFacesInput{
 			CollectionId:    aws.String(collectionId),
 			Image:           imageAWS,
-			ExternalImageId: aws.String(strconv.Itoa(int(face.ID))),
+			ExternalImageId: aws.String(face.ID),
 			MaxFaces:        aws.Int64(1),
 		}
 
@@ -47,25 +51,7 @@ func indexFaces(svc *rekognition.Rekognition, collectionId string, faces []model
 	return nil
 }
 
-// PrepareCollection creates a new rekognition collection and adds all of the given faces
-// to it.
-func PrepareCollection(collectionID string, faces []models.Face) error {
-	svc := newClient()
-
-	err := createCollection(svc, collectionID)
-	if err != nil {
-		return fmt.Errorf("createcollection: %w", err)
-	}
-
-	err = indexFaces(svc, collectionID, faces)
-	if err != nil {
-		return fmt.Errorf("indexfaces: %w", err)
-	}
-
-	return nil
-}
-
-// ListCollections returns a list that contains all of the collection IDs created by
+// RefreshCollections returns a list that contains all collection IDs created by
 // the connected AWS account.
 func RefreshCollections() error {
 	svc := newClient()
@@ -76,14 +62,15 @@ func RefreshCollections() error {
 		return fmt.Errorf("svc.listcollection: %w", err)
 	}
 
-	var collectionsIDs []string
+	collectionIDs = nil
 	for _, ID := range result.CollectionIds {
-		collectionsIDs = append(collectionsIDs, *ID)
+		collectionIDs = append(collectionIDs, *ID)
 	}
 
 	return nil
 }
 
+// ListCollections lists
 func ListCollections() []string {
 	return collectionIDs
 }

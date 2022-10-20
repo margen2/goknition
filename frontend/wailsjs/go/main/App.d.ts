@@ -3,4 +3,8 @@
 
 export function GetCollections(arg1:boolean):Promise<Array<string>>;
 
-export function Greet(arg1:string):Promise<string>;
+export function GetCwd():Promise<string>;
+
+export function GoBack(arg1:string):Promise<string>;
+
+export function ListFolders(arg1:string):Promise<Array<string>>;
