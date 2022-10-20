@@ -31,21 +31,23 @@ func IndexFaces(collectionId string, faces []models.Face) error {
 	svc := newClient()
 
 	for _, face := range faces {
-		imageAWS, err := newImageAWS(filepath.Join(face.Image.Path, face.Image.Filename))
-		if err != nil {
-			return fmt.Errorf("newimageaws: %w", err)
-		}
+		for _, image := range face.Images {
+			imageAWS, err := newImageAWS(filepath.Join(image.Path, image.Filename))
+			if err != nil {
+				return fmt.Errorf("newimageaws: %w", err)
+			}
 
-		input := &rekognition.IndexFacesInput{
-			CollectionId:    aws.String(collectionId),
-			Image:           imageAWS,
-			ExternalImageId: aws.String(face.ID),
-			MaxFaces:        aws.Int64(1),
-		}
+			input := &rekognition.IndexFacesInput{
+				CollectionId:    aws.String(collectionId),
+				Image:           imageAWS,
+				ExternalImageId: aws.String(face.FaceID),
+				MaxFaces:        aws.Int64(1),
+			}
 
-		_, err = svc.IndexFaces(input)
-		if err != nil {
-			return fmt.Errorf("svc.indexfaces: %w", err)
+			_, err = svc.IndexFaces(input)
+			if err != nil {
+				return fmt.Errorf("svc.indexfaces: %w", err)
+			}
 		}
 	}
 	return nil

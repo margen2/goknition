@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/margen2/goknition/backend/api"
+	"github.com/margen2/goknition/backend/controllers"
 	"github.com/margen2/goknition/backend/data"
 )
 
@@ -47,17 +47,8 @@ func (a *App) shutdown(ctx context.Context) {
 	// Perform your teardown here
 }
 
-func (a *App) GetCollections(refresh bool) []string {
-	if refresh {
-		err := api.RefreshCollections()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	return api.ListCollections()
-}
-
+// Collections
+// =====================
 func (a *App) GetCwd() string {
 	cwd, err := data.GetCwd()
 	if err != nil {
@@ -76,8 +67,40 @@ func (a *App) ListFolders(folder string) []string {
 }
 
 func (a *App) GoBack(folder string) string {
-	fmt.Println(folder)
-	folder = data.GoBack(folder)
-	fmt.Println(folder)
-	return folder
+	return data.GoBack(folder)
+}
+
+func (a *App) GetCollections(refresh bool) ([]string, error) {
+	if refresh {
+		err := api.RefreshCollections()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return api.ListCollections(), nil
+}
+
+func (a *App) CreateCollection(collectionID string) error {
+	err := controllers.CreateCollection(collectionID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return nil
+}
+
+func (a *App) IndexFaces(collectionID, path string) error {
+	err := controllers.IndexFaces(collectionID, path)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *App) DeleteCollection(collectionID string) error {
+	err := controllers.DeleteCollection(collectionID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

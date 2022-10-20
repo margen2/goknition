@@ -1,112 +1,75 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/margen2/goknition/backend/api"
 	"github.com/margen2/goknition/backend/data"
 	"github.com/margen2/goknition/backend/db"
 	"github.com/margen2/goknition/backend/repositories"
 )
 
-//CreateCollection serves the create-collection route. It create a new Rekognition Collection
-// and index all of the faces in the IDs folder to it.
-func CreateCollection(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		err := tpl.ExecuteTemplate(w, "collections.html", nil)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		return
+//CreateCollection creates a new Rekognition Face Collection.
+func CreateCollection(collection string) error {
+	db, err := db.ConnectDB()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	repositorie := repositories.NewImagesRepositorie(db)
+	err = repositorie.CreateCollection(collection)
+	if err != nil {
+		return err
 	}
 
-	faces, err := data.LoadFaces(r.FormValue("ids"))
+	err = api.CreateCollection(collection)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+
+	return nil
+}
+
+//IndexFaces indexes the faces found in the path to the given collectionID.
+func IndexFaces(collection, path string) error {
+	faces, err := data.LoadFaces(path)
+	if err != nil {
+		return err
 	}
 
 	db, err := db.ConnectDB()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 	defer db.Close()
 
-	collection := r.FormValue("collection")
 	repositorie := repositories.NewImagesRepositorie(db)
-	collectionID, err := repositorie.CreateCollection(collection)
+
+	collectionID, err := repositorie.GetCollectionID(collection)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
-	for i, face := range faces {
-		imageID, err := repositorie.CreateImage(face.Image, int(collectionID))
+	for _, face := range faces {
+		_, err := repositorie.CreateFace(face.FaceID, collectionID)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return err
 		}
-
-		FaceID, err := repositorie.CreateFace(face.FaceID, imageID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		faces[i].ID = FaceID
 	}
 
-	err = api.PrepareCollection(collection, faces)
+	err = api.IndexFaces(collection, faces)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 
-	err = tpl.ExecuteTemplate(w, "collections.html", collection)
-	if err != nil {
-		return
-	}
+	return nil
 }
 
-//GetCollections serves the get-collections route to return all of the active collections on the
-// Rekognition APi
-func GetCollections(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	collections := api.ListCollections()
-
-	err := tpl.ExecuteTemplate(w, "list-collections.html", collections)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
-//DeleteCollection serves the delete-collection route to delete the
-//requested collection from the Rekognition APi.
-func DeleteCollection(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		err := tpl.ExecuteTemplate(w, "delete-collection.html", nil)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		return
-	}
-
-	collectionID := r.FormValue("collection")
+//DeleteCollection deletes the given collection from the Rekognition API.
+func DeleteCollection(collectionID string) error {
 	err := api.DeleteCollection(collectionID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
-
-	err = tpl.ExecuteTemplate(w, "delete-collection.html", collectionID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	
+	return nil
 }

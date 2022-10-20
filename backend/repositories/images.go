@@ -17,34 +17,30 @@ func NewImagesRepositorie(db *sql.DB) *Images {
 	return &Images{db}
 }
 
-func (repositorie Images) CreateCollection(collectionName string) (uint64, error) {
+func (repositorie Images) CreateCollection(collectionName string) error {
 	statement, err := repositorie.db.Prepare("INSERT INTO collections(name) values(?)")
 	if err != nil {
-		return 0, fmt.Errorf("createcollection/db.prepare: %w", err)
+		return fmt.Errorf("createcollection/db.prepare: %w", err)
 	}
 	defer statement.Close()
 
-	result, err := statement.Exec(collectionName)
+	_, err = statement.Exec(collectionName)
 	if err != nil {
-		return 0, fmt.Errorf("createcollection/statement.exec: %w", err)
+		return fmt.Errorf("createcollection/statement.exec: %w", err)
 	}
 
-	lastInsertedId, err := result.LastInsertId()
-	if err != nil {
-		return 0, fmt.Errorf("createcollection/result.lastinsertedid: %w", err)
-	}
-	return uint64(lastInsertedId), nil
+	return nil
 }
 
 // CreateFace inserts a face value into the database.
-func (repositorie Images) CreateFace(faceID string, imageID uint64) (uint64, error) {
-	statement, err := repositorie.db.Prepare("INSERT INTO faces(face_id, image_id) values(?, ?)")
+func (repositorie Images) CreateFace(faceID string, collectionID uint64) (uint64, error) {
+	statement, err := repositorie.db.Prepare("INSERT INTO faces(face_id, collection_id) values(?, ?)")
 	if err != nil {
 		return 0, fmt.Errorf("createface/db.prepare: %w", err)
 	}
 	defer statement.Close()
 
-	result, err := statement.Exec(faceID, imageID)
+	result, err := statement.Exec(faceID, collectionID)
 	if err != nil {
 		return 0, fmt.Errorf("createface/statement.exec: %w", err)
 	}
@@ -57,7 +53,7 @@ func (repositorie Images) CreateFace(faceID string, imageID uint64) (uint64, err
 }
 
 // CreateImage inserts a image value into the database.
-func (repositorie Images) CreateImage(image models.Image, collectionID int) (uint64, error) {
+func (repositorie Images) CreateImage(image models.Image, collectionID uint64) (uint64, error) {
 	statement, err := repositorie.db.Prepare("INSERT INTO images(file_name, image_path, collection_id) values(?, ?, ?)")
 	if err != nil {
 		return 0, fmt.Errorf("createimage/db.prepare: %w", err)

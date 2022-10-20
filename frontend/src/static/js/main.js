@@ -1,8 +1,20 @@
 //  Collections
 //  ========================================== 
-function listCollections() {  
+
+document.getElementById('collections').addEventListener('click',async function(){
+  await fetch('templates/collections.html')
+  .then(response=> response.text())
+  .then(text=> document.getElementsByClassName('content')[0].innerHTML = text);
+  listCollections(false)
+  document.getElementById("refresh-collections").addEventListener("click", function() {listCollections(true)})
+  document.getElementById("new-collection").addEventListener("click", function() {createCollection()})
+  highlight('collections')
+})
+
+function listCollections(refresh) {  
   const ul = document.getElementsByClassName("collections")[0]
-  window.go.main.App.GetCollections(false).then(result => {
+  ul.innerHTML = ""
+  window.go.main.App.GetCollections(refresh).then(result => {
     if (result === null) {return}; 
     for (var i = 0; i <result.length; i++) {
         var li = document.createElement("li");
@@ -26,7 +38,20 @@ function setCollection(id) {
   document.getElementById("active-collection").innerText = id;
 }
 
-
+async function createCollection() {
+  let collection = prompt("New collection ID:");
+  if (collection == null || collection == "") {
+    alert("operation cancelled")
+    return
+  } 
+  await window.go.main.App.CreateCollection(collection).then(result => {
+    }).catch(err => {
+      console.log(err);
+    }).finally(() => {
+      console.log("finished GetCollections")
+    });    
+    listCollections(true)
+}
 
 
 //    Folders
@@ -114,13 +139,7 @@ function highlight(id) {
 //    Load Templates
 //   ========================================== 
   
-document.getElementById('collections').addEventListener('click',async function(){
-  await fetch('templates/collections.html')
-  .then(response=> response.text())
-  .then(text=> document.getElementsByClassName('content')[0].innerHTML = text);
-  listCollections()
-  highlight('collections')
-})
+
  
 
 

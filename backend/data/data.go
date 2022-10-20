@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/margen2/goknition/backend/models"
 )
@@ -13,31 +14,37 @@ import (
 func LoadFaces(path string) ([]models.Face, error) {
 	dirs, err := os.ReadDir(path)
 	if err != nil {
-		return nil, fmt.Errorf("loadfaces/os.readdir: %w", err)
+		return nil, fmt.Errorf("os.readdir: %w", err)
 	}
 
 	var faces []models.Face
 	for _, dir := range dirs {
-		if dir.IsDir() {
-			ID := dir.Name()
-
-			filePath := filepath.Join(path, ID)
-			fls, err := os.ReadDir(filePath)
-			if err != nil {
-				return nil, fmt.Errorf("loadfaces/range/os.readdir: %w", err)
-			}
-
-			if len(fls) != 1 {
-				return nil, fmt.Errorf("loadfaces/range: ID folder has an invalid amount of files: %s", filePath)
-			}
-
-			fl := fls[0]
-			faces = append(faces, models.Face{
-				0, ID, models.Image{0, fl.Name(), filePath}})
-
-			continue
+		if !dir.IsDir() {
+			return nil, fmt.Errorf("unexpected file in path")
 		}
-		return nil, fmt.Errorf("loadfaces: unexpected file in path")
+
+		var face models.Face
+
+		face.FaceID = dir.Name()
+
+		images, err := os.ReadDir(filepath.Join(path, dir.Name()))
+		if err != nil {
+			return nil, fmt.Errorf("os.readdir: %w", err)
+		}
+
+		for _, image := range images {
+			if image.IsDir() {
+				return nil, fmt.Errorf("unexpected dir in path")
+			}
+
+			if strings.ToLower(filepath.Ext(image.Name())) != ".jpg" {
+				continue
+			}
+
+			face.Images = append(face.Images, models.Image{0, image.Name(), path})
+
+		}
+		faces = append(faces, face)
 	}
 	return faces, nil
 }
@@ -82,13 +89,13 @@ func Loadimages(imagesPath string) ([]models.Image, error) {
 // CopyImages copies all the given images to the specified path.
 func CopyImages(faceID, copy string, images []models.Image) error {
 
-	err := os.Mkdir(copy+`\`+faceID, fs.ModeDir)
+	err := os.Mkdir(filepath.Join(copy, faceID), fs.ModeDir)
 	if err != nil {
 		return fmt.Errorf("os.writefile: %w", err)
 	}
 
 	for _, image := range images {
-		fl, err := os.Open(image.Path + `\` + image.Filename)
+		fl, err := os.Open(filepath.Join(image.Path, image.Filename))
 		if err != nil {
 			return fmt.Errorf("os.open: %w", err)
 		}
@@ -105,7 +112,7 @@ func CopyImages(faceID, copy string, images []models.Image) error {
 			return fmt.Errorf("no bytes read or err fl.read: %w", err)
 		}
 
-		err = os.WriteFile(copy+`\`+faceID+`\`+image.Filename, b, 0666)
+		err = os.WriteFile(filepath.Join(copy, faceID, image.Filename), b, 0666)
 		if err != nil {
 			return fmt.Errorf("os.writefile: %w", err)
 		}

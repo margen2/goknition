@@ -2,9 +2,8 @@ package models
 
 // Face represents a face value within the given image.
 type Face struct {
-	ID     uint64
 	FaceID string
-	Image  Image
+	Images []Image
 }
 
 // Image represents a image file.
