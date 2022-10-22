@@ -31,7 +31,7 @@ func main() {
 		DisableResize:     false,
 		Fullscreen:        false,
 		Frameless:         false,
-		StartHidden:       true,
+		StartHidden:       false,
 		HideWindowOnClose: false,
 		BackgroundColour:  &options.RGBA{R: 255, G: 255, B: 255, A: 255},
 		Assets:            assets,

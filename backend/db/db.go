@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/margen2/goknition/backend/config"
 )
 
+var StringConnectionBD string
+
 func ConnectDB() (*sql.DB, error) {
-	db, err := sql.Open("mysql", config.StringConnectionBD)
+	db, err := sql.Open("mysql", StringConnectionBD)
 	if err != nil {
 		return nil, fmt.Errorf("connectdb/sql.open: %w", err)
 	}
@@ -20,4 +21,8 @@ func ConnectDB() (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func SetConnection(connection string) {
+	StringConnectionBD = connection
 }

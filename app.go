@@ -22,6 +22,7 @@ func NewApp() *App {
 // startup is called at application startup
 func (a *App) startup(ctx context.Context) {
 	// Perform your setup here
+	load()
 	err := api.RefreshCollections()
 	if err != nil {
 		log.Fatal(err)
