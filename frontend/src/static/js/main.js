@@ -15,7 +15,10 @@ function listCollections(refresh) {
   const ul = document.getElementsByClassName("collections")[0]
   ul.innerHTML = ""
   window.go.main.App.GetCollections(refresh).then(result => {
-    if (result === null) {return}; 
+    if (result === null) {
+      document.getElementsByClassName('content')[0].innerHTML += "<h2>No collections found</h2>"
+      return
+    }; 
     for (var i = 0; i <result.length; i++) {
         var li = document.createElement("li");
         li.setAttribute('class', "collection")
@@ -28,7 +31,7 @@ function listCollections(refresh) {
         document.getElementById(result[i]).onclick = function () {setCollection(this.id)};
     };
     }).catch(err => {
-      console.log(err);
+      alert(err);
     }).finally(() => {
       console.log("finished GetCollections")
     });    
@@ -44,86 +47,25 @@ async function createCollection() {
     alert("operation cancelled")
     return
   } 
-  await window.go.main.App.CreateCollection(collection).then(result => {
-    }).catch(err => {
-      console.log(err);
+  await window.go.main.App.CreateCollection(collection).catch(err => {
+      alert(err);
     }).finally(() => {
       console.log("finished GetCollections")
     });    
     listCollections(true)
 }
 
-
-//    Folders
-//   ========================================== 
-
-async function loadFolderHTML() {
-  await  fetch('templates/folders.html')
-    .then(response=> response.text())
-    .then(text=> document.getElementsByClassName('content')[0].innerHTML = text);
-
-  document.getElementById("goback").addEventListener("click", goBack)
-}
-
-var FullPath;
-
-async function LoadFolders(id) {
-  await loadFolderHTML();
-  await window.go.main.App.GetCwd().then(result => {
-    FullPath = result;
-  }).catch(err => {
-    console.log(err);
-  }).finally(() => {
-    console.log("finished GetCWd")
-  });
-
-  document.getElementById("FullPath").innerText = FullPath;
-  listFolders("")
-  highlight('images')
-}
-
-function listFolders(folder) {
-  if (folder !== "") {  
-    FullPath += "\\" +document.getElementById(folder).innerText;
-    document.getElementById("FullPath").innerText = FullPath
-  }
-  
-  window.go.main.App.ListFolders(FullPath).then(result => {
-    const ul = document.getElementById("folders");
-    ul.innerHTML = "";
-    console.log(result )
-    if (result === null) {return} 
-    for (let i = 0; i <result.length; i++) {
-      var li = document.createElement("li");
-      li.setAttribute('id', "folder-"+i)
-      li.onclick = function() {listFolders(this.id)}
-      li.innerText = result[i]
-      ul.appendChild(li)
+async function GetFaces(id) {
+  await window.go.main.App.GetFaces(collection).then(result => {
+    if (result === null) {
+      
     }
-  }).catch(err => {
-    console.log(err);
-  }).finally(() => {
-    console.log("finished! ListFolders")
-  });
+    }).catch(err => {
+      alert(err);
+    }).finally(() => {
+      console.log("finished GetCollections")
+    });    
 }
-
-
-
-async function goBack() {
-  const ul = document.getElementById("folders");
-  ul.innerHTML = "";
-
- await window.go.main.App.GoBack(FullPath).then(result => {
-    document.getElementById("FullPath").innerText = result;
-    FullPath  = result;
-    listFolders("") 
-  }).catch(err => {
-    console.log(err);
-  }).finally(() => {
-    console.log("finished GoBack")
-  });
-}
-
 
 //    Highlight
 //   ========================================== 
@@ -139,9 +81,6 @@ function highlight(id) {
 //    Load Templates
 //   ========================================== 
   
-
- 
-
 
 // document.getElementById('create').addEventListener('click', function(){
 //   fetch('templates/create-collection.html')
@@ -162,13 +101,29 @@ function highlight(id) {
 //   ListCollections()
 // })
 
-document.getElementById('images').addEventListener('click',  function(){
-   fetch('templates/images.html')
+//    Load Images
+//   ========================================== 
+async function getDataDir() {
+  await window.go.main.App.GetDataDir().then(result => {
+  document.getElementById("data-chosen").innerText = result
+  }).catch(err => {
+    alert(err);
+  }).finally(() => {
+    console.log("finished! getDataDir")
+  });
+}
+
+ document.getElementById('images').addEventListener('click',  async function(){
+   await fetch('templates/images.html')
   .then(response=> response.text())
   .then(text=> document.getElementsByClassName('content')[0].innerHTML = text);
   highlight('images')
+  document.getElementById("data-dir").addEventListener("click", getDataDir)
 
 })
+
+//    Results 
+//   ========================================== 
 
 document.getElementById('matches').addEventListener('click', function(){
   fetch('templates/matches.html')

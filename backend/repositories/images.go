@@ -52,6 +52,26 @@ func (repositorie Images) CreateFace(faceID string, collectionID uint64) (uint64
 	return uint64(lastInsertedId), nil
 }
 
+func (repositorie Images) GetFaces(collectionID uint64) ([]models.Face, error) {
+	lines, err := repositorie.db.Query(`
+	SELECT face_id FROM faces WHERE collection_id = ?; `, collectionID)
+	if err != nil {
+		return nil, fmt.Errorf("db.query: %w", err)
+	}
+	defer lines.Close()
+
+	var faces []models.Face
+	for lines.Next() {
+		var face models.Face
+		if err = lines.Scan(&face.FaceID); err != nil {
+			return nil, fmt.Errorf("lines.scan: %w", err)
+		}
+		faces = append(faces, face)
+	}
+
+	return faces, nil
+}
+
 // CreateImage inserts a image value into the database.
 func (repositorie Images) CreateImage(image models.Image, collectionID uint64) (uint64, error) {
 	statement, err := repositorie.db.Prepare("INSERT INTO images(file_name, image_path, collection_id) values(?, ?, ?)")

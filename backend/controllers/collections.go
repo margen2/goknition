@@ -21,7 +21,17 @@ func CreateCollection(collection string) error {
 		return err
 	}
 
-	err = api.CreateCollection(collection)
+	// err = api.CreateCollection(collection)
+	// if err != nil {
+	// 	return err
+	// }
+
+	return nil
+}
+
+//DeleteCollection deletes the given collection from the Rekognition API.
+func DeleteCollection(collectionID string) error {
+	err := api.DeleteCollection(collectionID)
 	if err != nil {
 		return err
 	}
@@ -64,12 +74,31 @@ func IndexFaces(collection, path string) error {
 	return nil
 }
 
-//DeleteCollection deletes the given collection from the Rekognition API.
-func DeleteCollection(collectionID string) error {
-	err := api.DeleteCollection(collectionID)
+//GetFaces returns the saved faces for the given collection.
+func GetFaces(collection string) ([]string, error) {
+
+	db, err := db.ConnectDB()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	
-	return nil
+	defer db.Close()
+
+	repositorie := repositories.NewImagesRepositorie(db)
+
+	collectionID, err := repositorie.GetCollectionID(collection)
+	if err != nil {
+		return nil, err
+	}
+
+	faces, err := repositorie.GetFaces(collectionID)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []string
+	for _, face := range faces {
+		result = append(result, face.FaceID)
+	}
+
+	return result, nil
 }

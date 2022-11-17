@@ -23,7 +23,7 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:             "gokWails",
+		Title:             "goknition",
 		Width:             1024,
 		Height:            768,
 		MinWidth:          1024,
@@ -31,7 +31,7 @@ func main() {
 		DisableResize:     false,
 		Fullscreen:        false,
 		Frameless:         false,
-		StartHidden:       false,
+		StartHidden:       true,
 		HideWindowOnClose: false,
 		BackgroundColour:  &options.RGBA{R: 255, G: 255, B: 255, A: 255},
 		Assets:            assets,
@@ -68,7 +68,7 @@ func main() {
 			WebviewIsTransparent: true,
 			WindowIsTranslucent:  true,
 			About: &mac.AboutInfo{
-				Title:   "gokWails",
+				Title:   "goknition",
 				Message: "",
 				Icon:    icon,
 			},

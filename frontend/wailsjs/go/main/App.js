@@ -14,18 +14,14 @@ export function GetCollections(arg1) {
   return window['go']['main']['App']['GetCollections'](arg1);
 }
 
-export function GetCwd() {
-  return window['go']['main']['App']['GetCwd']();
+export function GetDataDir() {
+  return window['go']['main']['App']['GetDataDir']();
 }
 
-export function GoBack(arg1) {
-  return window['go']['main']['App']['GoBack'](arg1);
+export function GetFaces(arg1) {
+  return window['go']['main']['App']['GetFaces'](arg1);
 }
 
 export function IndexFaces(arg1, arg2) {
   return window['go']['main']['App']['IndexFaces'](arg1, arg2);
-}
-
-export function ListFolders(arg1) {
-  return window['go']['main']['App']['ListFolders'](arg1);
 }

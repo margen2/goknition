@@ -43,7 +43,6 @@ func IndexFaces(collectionId string, faces []models.Face) error {
 				ExternalImageId: aws.String(face.FaceID),
 				MaxFaces:        aws.Int64(1),
 			}
-
 			_, err = svc.IndexFaces(input)
 			if err != nil {
 				return fmt.Errorf("svc.indexfaces: %w", err)

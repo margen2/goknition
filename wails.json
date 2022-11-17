@@ -1,6 +1,6 @@
 {
-  "name": "gokWails",
-  "outputfilename": "gokWails",
+  "name": "goknition",
+  "outputfilename": "goknition",
   "frontend:install": "",
   "frontend:build": "",
   "author": {

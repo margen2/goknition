@@ -23,6 +23,76 @@ func ConnectDB() (*sql.DB, error) {
 	return db, nil
 }
 
-func SetConnection(connection string) {
-	StringConnectionBD = connection
+func SetConnection(user, pw, dbName string) error {
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@/?charset=utf8&parseTime=True&loc=Local", user, pw))
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS goknition_new;")
+	if err != nil {
+		return err
+	}
+	db.Close()
+
+	StringConnectionBD = fmt.Sprintf("%s:%s@/%s?charset=utf8&parseTime=True&loc=Local", user, pw, dbName)
+	db, err = sql.Open("mysql", StringConnectionBD)
+	if err != nil {
+		return err
+	}
+
+	if err = db.Ping(); err != nil {
+		db.Close()
+		return err
+	}
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS collections(
+		id INT auto_increment PRIMARY KEY,
+		name varchar(50) UNIQUE NOT NULL
+	) ENGINE=INNODB;`)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS images (
+		id INT auto_increment PRIMARY KEY,
+		file_name VARCHAR(100) NOT NULL,
+		image_path VARCHAR(200) NOT NULL,
+		collection_id INT NOT NULL, 
+		FOREIGN KEY (collection_id) 
+		REFERENCES collections(id)
+	) ENGINE=INNODB;`)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS faces(
+		id INT auto_increment PRIMARY KEY,
+		face_id VARCHAR(100) NOT NULL, 
+		collection_id INT NOT NULL 
+		) ENGINE=INNODB;`)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS matches(
+		face_id INT NOT NULL,
+		FOREIGN KEY (face_id)
+		REFERENCES faces(id),
+		image_id INT NOT NULL,
+		FOREIGN KEY (image_id)
+		REFERENCES images(id)
+	) ENGINE=INNODB;`)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS nomatches(
+		image_id INT NOT NULL,
+		FOREIGN KEY (image_id)
+		REFERENCES images(id)
+	) ENGINE=INNODB;`)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

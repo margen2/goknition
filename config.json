@@ -1,5 +1,5 @@
 {
-  "db_name": "goknition",
-  "db_password": "root",
-  "db_user": "root"
+  "db_name": "goknition_new",
+  "db_password": "golang",
+  "db_user": "go"
 }

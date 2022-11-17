@@ -6,7 +6,7 @@ import (
 
 	"github.com/margen2/goknition/backend/api"
 	"github.com/margen2/goknition/backend/controllers"
-	"github.com/margen2/goknition/backend/data"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -50,26 +50,6 @@ func (a *App) shutdown(ctx context.Context) {
 
 // Collections
 // =====================
-func (a *App) GetCwd() string {
-	cwd, err := data.GetCwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return cwd
-}
-
-func (a *App) ListFolders(folder string) []string {
-	folders, err := data.ListFolders(folder)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return folders
-}
-
-func (a *App) GoBack(folder string) string {
-	return data.GoBack(folder)
-}
 
 func (a *App) GetCollections(refresh bool) ([]string, error) {
 	if refresh {
@@ -85,7 +65,15 @@ func (a *App) GetCollections(refresh bool) ([]string, error) {
 func (a *App) CreateCollection(collectionID string) error {
 	err := controllers.CreateCollection(collectionID)
 	if err != nil {
-		log.Fatal(err)
+		return err
+	}
+	return nil
+}
+
+func (a *App) DeleteCollection(collectionID string) error {
+	err := controllers.DeleteCollection(collectionID)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -98,10 +86,20 @@ func (a *App) IndexFaces(collectionID, path string) error {
 	return nil
 }
 
-func (a *App) DeleteCollection(collectionID string) error {
-	err := controllers.DeleteCollection(collectionID)
+func (a *App) GetFaces(collectionID string) ([]string, error) {
+	faces, err := controllers.GetFaces(collectionID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return faces, nil
+}
+
+func (a *App) GetDataDir() string {
+	dir, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Select Data Folder",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	return dir
 }
