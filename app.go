@@ -94,12 +94,19 @@ func (a *App) GetFaces(collectionID string) ([]string, error) {
 	return faces, nil
 }
 
-func (a *App) GetDataDir() string {
+// Search Faces
+// =====================
+func (a *App) SearchFaces(collectionID string) error {
 	dir, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select Data Folder",
 	})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	return dir
+
+	err = controllers.SearchImages(collectionID, dir)
+	if err != nil {
+		return err
+	}
+	return nil
 }

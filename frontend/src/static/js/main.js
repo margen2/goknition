@@ -11,6 +11,7 @@ document.getElementById('collections').addEventListener('click',async function()
   highlight('collections')
 })
 
+//refresh Boolean
 function listCollections(refresh) {  
   const ul = document.getElementsByClassName("collections")[0]
   ul.innerHTML = ""
@@ -24,18 +25,20 @@ function listCollections(refresh) {
         li.setAttribute('class', "collection")
         li.innerHTML = `<div class="collection-id">${result[i]}</div>
         <div class="collection-btns"> 
-            <button>details</button>
+            <button class="collection-details">details</button>
             <button id="${result[i]}">select</button> 
         </div>`
         ul.appendChild(li)
         document.getElementById(result[i]).onclick = function () {setCollection(this.id)};
-    };
+        document.getElementsByClassName("collection-details")[i].addEventListener("click", function () {alert("TODO :)")});
+      };
     }).catch(err => {
       alert(err);
     }).finally(() => {
       console.log("finished GetCollections")
     });    
 }
+
 
 function setCollection(id) {
   document.getElementById("active-collection").innerText = id;
@@ -53,18 +56,6 @@ async function createCollection() {
       console.log("finished GetCollections")
     });    
     listCollections(true)
-}
-
-async function GetFaces(id) {
-  await window.go.main.App.GetFaces(collection).then(result => {
-    if (result === null) {
-      
-    }
-    }).catch(err => {
-      alert(err);
-    }).finally(() => {
-      console.log("finished GetCollections")
-    });    
 }
 
 //    Highlight
@@ -101,26 +92,25 @@ function highlight(id) {
 //   ListCollections()
 // })
 
-//    Load Images
+//   Images
 //   ========================================== 
-async function getDataDir() {
-  await window.go.main.App.GetDataDir().then(result => {
-  document.getElementById("data-chosen").innerText = result
-  }).catch(err => {
+
+document.getElementById('images').addEventListener('click',  async function(){
+  await fetch('templates/images.html')
+ .then(response=> response.text())
+ .then(text=> document.getElementsByClassName('content')[0].innerHTML = text);
+ highlight('images')
+ document.getElementById("data-dir").addEventListener("click", searchFaces)
+})
+
+async function searchFaces() {
+  let collection = document.getElementById("active-collection").innerText
+  await window.go.main.App.SearchFaces(collection).catch(err => {
     alert(err);
   }).finally(() => {
-    console.log("finished! getDataDir")
+    alert("succefully uploaded images")
   });
 }
-
- document.getElementById('images').addEventListener('click',  async function(){
-   await fetch('templates/images.html')
-  .then(response=> response.text())
-  .then(text=> document.getElementsByClassName('content')[0].innerHTML = text);
-  highlight('images')
-  document.getElementById("data-dir").addEventListener("click", getDataDir)
-
-})
 
 //    Results 
 //   ========================================== 

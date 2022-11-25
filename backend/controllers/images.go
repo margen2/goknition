@@ -13,7 +13,6 @@ import (
 //SearchImages uploads all the files in the given images
 //folder to the Rekognition API and stores the result.
 func SearchImages(collection, path string) error {
-
 	images, err := data.Loadimages(path)
 	if err != nil {
 		return err
