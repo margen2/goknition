@@ -9,11 +9,9 @@ import (
 	"github.com/margen2/goknition/backend/models"
 )
 
-var collectionIDs []string
-
-// CreateCollection
+// CreateCollection creates a new face collection on AWS
 func CreateCollection(collectionId string) error {
-	svc := newClient()
+	svc := rekognition.New(mySession)
 
 	input := &rekognition.CreateCollectionInput{
 		CollectionId: aws.String(collectionId),
@@ -26,9 +24,9 @@ func CreateCollection(collectionId string) error {
 	return nil
 }
 
-// IndexFaces
+// IndexFaces adds the faces array to the given collectionID
 func IndexFaces(collectionId string, faces []models.Face) error {
-	svc := newClient()
+	svc := rekognition.New(mySession)
 
 	for _, face := range faces {
 		for _, image := range face.Images {
@@ -52,12 +50,14 @@ func IndexFaces(collectionId string, faces []models.Face) error {
 	return nil
 }
 
-// RefreshCollections returns a list that contains all collection IDs created by
-// the connected AWS account.
-func RefreshCollections() error {
-	svc := newClient()
-	input := &rekognition.ListCollectionsInput{}
+// collectionIDs represents the active collections on AWS
+var collectionIDs []string
 
+// RefreshCollections updates the collectionsIDs variable
+func RefreshCollections() error {
+	svc := rekognition.New(mySession)
+
+	input := &rekognition.ListCollectionsInput{}
 	result, err := svc.ListCollections(input)
 	if err != nil {
 		return fmt.Errorf("svc.listcollection: %w", err)
@@ -71,14 +71,14 @@ func RefreshCollections() error {
 	return nil
 }
 
-// ListCollections lists
+// ListCollections lists the active collections
 func ListCollections() []string {
 	return collectionIDs
 }
 
 // DeleteCollection deletes the corresponding collection from AWS
 func DeleteCollection(collectionID string) error {
-	svc := newClient()
+	svc := rekognition.New(mySession)
 
 	input := &rekognition.DeleteCollectionInput{
 		CollectionId: aws.String(collectionID),

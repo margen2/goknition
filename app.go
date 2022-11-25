@@ -21,8 +21,11 @@ func NewApp() *App {
 
 // startup is called at application startup
 func (a *App) startup(ctx context.Context) {
-	// Perform your setup here
-	load()
+	// initializes database connection
+	loadConfig()
+
+	api.InitializeSession()
+
 	err := api.RefreshCollections()
 	if err != nil {
 		log.Fatal(err)
@@ -75,8 +78,16 @@ func (a *App) DeleteCollection(collectionID string) error {
 	if err != nil {
 		return err
 	}
+
+	err = api.RefreshCollections()
+	if err != nil {
+		return err
+	}
 	return nil
 }
+
+// Faces
+// =====================
 
 func (a *App) IndexFaces(collectionID, path string) error {
 	err := controllers.IndexFaces(collectionID, path)
@@ -94,8 +105,6 @@ func (a *App) GetFaces(collectionID string) ([]string, error) {
 	return faces, nil
 }
 
-// Search Faces
-// =====================
 func (a *App) SearchFaces(collectionID string) error {
 	dir, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select Data Folder",

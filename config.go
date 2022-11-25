@@ -8,7 +8,7 @@ import (
 )
 
 // Load loads the config.json configuration file
-func load() {
+func loadConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("json")
 	viper.AddConfigPath(".")
