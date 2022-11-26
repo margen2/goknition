@@ -74,7 +74,7 @@ func (repositorie Images) GetFaces(collectionID uint64) ([]models.Face, error) {
 
 // CreateImage inserts a image value into the database.
 func (repositorie Images) CreateImage(image models.Image, collectionID uint64) (uint64, error) {
-	statement, err := repositorie.db.Prepare("INSERT INTO images(file_name, image_path, collection_id) values(?, ?, ?)")
+	statement, err := repositorie.db.Prepare("INSERT INTO images(file_name, file_path, collection_id) values(?, ?, ?)")
 	if err != nil {
 		return 0, fmt.Errorf("createimage/db.prepare: %w", err)
 	}
@@ -111,7 +111,7 @@ func (repositorie Images) CreateMatch(faceID, imageID uint64) error {
 // GetMatches queries the database for all the entries on the matches tables.
 func (repositorie Images) GetMatches(faceID string) ([]models.Image, error) {
 	lines, err := repositorie.db.Query(`
-	SELECT i.file_name, i.image_path FROM matches m
+	SELECT i.file_name, i.file_path FROM matches m
 	INNER JOIN faces f on f.id = m.face_id
 	INNER JOIN images i on i.id = m.image_id
 	WHERE f.face_id = ?; `, faceID)
@@ -154,7 +154,7 @@ func (repositorie Images) CreateNoMatch(imageID uint64) error {
 // GetNoMatches returns all the entries on the no_matches table
 func (repositorie Images) GetNoMatches() ([]models.Image, error) {
 	lines, err := repositorie.db.Query(`
-	SELECT i.file_name, i.image_path FROM nomatches nm 
+	SELECT i.file_name, i.file_path FROM nomatches nm 
 	INNER JOIN images i ON  nm.image_id = i.id`)
 	if err != nil {
 		return nil, fmt.Errorf("getnomatches/db.query: %w", err)
@@ -179,18 +179,18 @@ func (repositorie Images) GetNoMatches() ([]models.Image, error) {
 // GetFaceIDs returns all of the face_id entries from the faces table.
 func (repositorie Images) GetFaceIDs(collectionID uint64) ([]models.Face, error) {
 	lines, err := repositorie.db.Query(`
-	SELECT face_id FROM faces f
-	INNER JOIN images i ON f.image_id = i.id
-	WHERE i.collection_id= ?`, collectionID)
+	SELECT f.id, f.face_id FROM faces f WHERE f.collection_id= ?`, collectionID)
 	if err != nil {
 		return nil, fmt.Errorf("getfaceids/db.query: %w", err)
 	}
 	defer lines.Close()
 
 	var faces []models.Face
+
 	for lines.Next() {
 		var face models.Face
 		if err := lines.Scan(
+			&face.ID,
 			&face.FaceID,
 		); err != nil {
 			return nil, fmt.Errorf("getfaceids/lines.scan: %w", err)

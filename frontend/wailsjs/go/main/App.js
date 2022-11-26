@@ -14,14 +14,14 @@ export function GetCollections(arg1) {
   return window['go']['main']['App']['GetCollections'](arg1);
 }
 
-export function GetDataDir() {
-  return window['go']['main']['App']['GetDataDir']();
-}
-
 export function GetFaces(arg1) {
   return window['go']['main']['App']['GetFaces'](arg1);
 }
 
-export function IndexFaces(arg1, arg2) {
-  return window['go']['main']['App']['IndexFaces'](arg1, arg2);
+export function IndexFaces(arg1) {
+  return window['go']['main']['App']['IndexFaces'](arg1);
+}
+
+export function SearchFaces(arg1) {
+  return window['go']['main']['App']['SearchFaces'](arg1);
 }

@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"fmt"
+
 	"github.com/margen2/goknition/backend/api"
 	"github.com/margen2/goknition/backend/data"
 	"github.com/margen2/goknition/backend/db"
@@ -65,7 +67,8 @@ func IndexFaces(collection, path string) error {
 			return err
 		}
 	}
-
+	fmt.Println(faces)
+	return nil
 	err = api.IndexFaces(collection, faces)
 	if err != nil {
 		return err

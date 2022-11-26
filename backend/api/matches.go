@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -123,12 +122,7 @@ func searchFaces(svc *rekognition.Rekognition, requestC chan imageBytes, resultC
 		match := models.Match{Image: r.image, FaceIDs: nil}
 		if len(res.FaceMatches) > 0 {
 			for _, fm := range res.FaceMatches {
-				FaceID, err := strconv.ParseUint(*fm.Face.ExternalImageId, 10, 64)
-				if err != nil {
-					errC <- fmt.Errorf("strconv.parseuint: %w", err)
-					return
-				}
-				match.FaceIDs = append(match.FaceIDs, FaceID)
+				match.FaceIDs = append(match.FaceIDs, *fm.Face.ExternalImageId)
 			}
 			resultC <- result{match, models.Image{}}
 		} else {

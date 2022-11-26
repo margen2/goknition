@@ -89,8 +89,15 @@ func (a *App) DeleteCollection(collectionID string) error {
 // Faces
 // =====================
 
-func (a *App) IndexFaces(collectionID, path string) error {
-	err := controllers.IndexFaces(collectionID, path)
+func (a *App) IndexFaces(collectionID string) error {
+	dir, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Select Faces folder",
+	})
+	if err != nil {
+		return err
+	}
+
+	err = controllers.IndexFaces(collectionID, dir)
 	if err != nil {
 		return err
 	}

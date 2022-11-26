@@ -2,6 +2,7 @@ package models
 
 // Face represents a face value within the given image.
 type Face struct {
+	ID     uint64
 	FaceID string
 	Images []Image
 }
@@ -16,5 +17,5 @@ type Image struct {
 // Match represents the matches between one image and all the faces that it contains.
 type Match struct {
 	Image   Image
-	FaceIDs []uint64
+	FaceIDs []string
 }

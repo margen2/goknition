@@ -41,7 +41,7 @@ func LoadFaces(path string) ([]models.Face, error) {
 				continue
 			}
 
-			face.Images = append(face.Images, models.Image{0, image.Name(), path})
+			face.Images = append(face.Images, models.Image{ID: 0, Filename: image.Name(), Path: path})
 
 		}
 		faces = append(faces, face)
@@ -66,14 +66,19 @@ func getImages(path string) error {
 			}
 			continue
 		}
-		images = append(images, models.Image{0, dir.Name(), path})
+
+		if strings.ToLower(filepath.Ext(dir.Name())) != ".jpg" {
+			continue
+		}
+
+		images = append(images, models.Image{ID: 0, Filename: dir.Name(), Path: path})
 	}
 
 	return nil
 }
 
-// loadimages receives a path to an images folder. It returns a slice of type Image
-// with all of the images in the corresponding path.
+// Loadimages receives a path to an images folder. It returns a slice of type Image
+// with all the images found in the corresponding path.
 func Loadimages(imagesPath string) ([]models.Image, error) {
 	err := getImages(imagesPath)
 	if err != nil {

@@ -25,12 +25,12 @@ function listCollections(refresh) {
         li.setAttribute('class', "collection")
         li.innerHTML = `<div class="collection-id">${result[i]}</div>
         <div class="collection-btns"> 
-            <button class="collection-details">details</button>
-            <button id="${result[i]}">select</button> 
+            <button id="add-${result[i]}"class="collection-details">Add Faces</button>
+            <button id="select-${result[i]}">select</button> 
         </div>`
         ul.appendChild(li)
-        document.getElementById(result[i]).onclick = function () {setCollection(this.id)};
-        document.getElementsByClassName("collection-details")[i].addEventListener("click", function () {alert("TODO :)")});
+        document.getElementById("select-"+result[i]).onclick = function () {setCollection(this.id)};
+        document.getElementById("add-"+result[i]).onclick = function () {addFaces(this.id)};
       };
     }).catch(err => {
       alert(err);
@@ -41,6 +41,7 @@ function listCollections(refresh) {
 
 
 function setCollection(id) {
+  id = id.replace('select-', '')
   document.getElementById("active-collection").innerText = id;
 }
 
@@ -52,11 +53,23 @@ async function createCollection() {
   } 
   await window.go.main.App.CreateCollection(collection).catch(err => {
       alert(err);
+      return
     }).finally(() => {
       console.log("finished GetCollections")
     });    
     listCollections(true)
 }
+
+async function addFaces(id) {
+  id = id.replace('add-', '')
+  await window.go.main.App.IndexFaces(id).catch(err => {
+      alert(err);
+      return
+    }).finally(() => {
+      console.log("finished IndexFaces")
+    });    
+}
+
 
 //    Highlight
 //   ========================================== 

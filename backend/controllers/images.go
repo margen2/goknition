@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"fmt"
-
 	"github.com/margen2/goknition/backend/api"
 	"github.com/margen2/goknition/backend/data"
 	"github.com/margen2/goknition/backend/db"
@@ -11,7 +9,7 @@ import (
 )
 
 //SearchImages uploads all the files in the given images
-//folder to the Rekognition API and stores the result.
+//folder to the Rekognition API and saves the result to the database.
 func SearchImages(collection, path string) error {
 	images, err := data.Loadimages(path)
 	if err != nil {
@@ -43,9 +41,18 @@ func SearchImages(collection, path string) error {
 		return err
 	}
 
+	faces, err := repositorie.GetFaceIDs(collectionID)
+	if err != nil {
+		return err
+	}
+	faceIDs := make(map[string]uint64, len(faces))
+	for _, face := range faces {
+		faceIDs[face.FaceID] = face.ID
+	}
+
 	for _, match := range matches {
 		for _, ID := range match.FaceIDs {
-			err = repositorie.CreateMatch(ID, match.Image.ID)
+			err = repositorie.CreateMatch(faceIDs[ID], match.Image.ID)
 			if err != nil {
 				return err
 			}
@@ -78,7 +85,7 @@ func GetMatches(FaceID string) ([]models.Image, error) {
 	return images, nil
 }
 
-//GetNoMatches returns all of the images without a matching face.
+//GetNoMatches returns all the images without a matching face.
 func GetNoMatches() ([]models.Image, error) {
 	db, err := db.ConnectDB()
 	if err != nil {
@@ -113,7 +120,6 @@ func SaveMatches(collection, path string) error {
 	}
 
 	for _, face := range faces {
-		fmt.Println("printin faces", face.FaceID)
 		images, err := repositorie.GetMatches(face.FaceID)
 
 		if err != nil {
