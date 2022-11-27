@@ -20,8 +20,8 @@ function listCollections(refresh) {
       document.getElementsByClassName('content')[0].innerHTML += "<h2>No collections found</h2>"
       return
     }; 
-    for (var i = 0; i <result.length; i++) {
-        var li = document.createElement("li");
+    for (let i = 0; i <result.length; i++) {
+        let li = document.createElement("li");
         li.setAttribute('class', "collection")
         li.innerHTML = `<div class="collection-id">${result[i]}</div>
         <div class="collection-btns"> 
@@ -66,7 +66,7 @@ async function addFaces(id) {
       alert(err);
       return
     }).finally(() => {
-      console.log("finished IndexFaces")
+      alert("finished IndexFaces")
     });    
 }
 
@@ -75,7 +75,7 @@ async function addFaces(id) {
 //   ========================================== 
 
 function highlight(id) {
-  var active = document.getElementsByClassName("active");
+  let active = document.getElementsByClassName("active");
   if (active.length !== 0) {
       active[0].className = active[0].className.replace("active", "") 
   }
@@ -128,25 +128,114 @@ async function searchFaces() {
 //    Results 
 //   ========================================== 
 
-document.getElementById('matches').addEventListener('click', function(){
-  fetch('templates/matches.html')
+document.getElementById('results').addEventListener('click', async function(){
+  await fetch('templates/results.html')
   .then(response=> response.text())
   .then(text=> document.getElementsByClassName('content')[0].innerHTML = text);
-  highlight('matches')
-
-})
-
-document.getElementById('nomatches').addEventListener('click', function(){
-  fetch('templates/nomatches.html')
-  .then(response=> response.text())
-  .then(text=> document.getElementsByClassName('content')[0].innerHTML = text);
-  highlight('nomatches')
+  highlight('results')
+  listCollectionsResults(false)
+  document.getElementById("refresh-collections").addEventListener("click", function() {listCollectionsResults(true)})
 })
 
 
-document.getElementById('savematches').addEventListener('click', function(){
-  fetch('templates/save-matches.html')
+function listCollectionsResults(refresh) {  
+  const ul = document.getElementsByClassName("collections")[0]
+  ul.innerHTML = ""
+  window.go.main.App.GetCollections(refresh).then(result => {
+    if (result === null) {
+      document.getElementsByClassName('content')[0].innerHTML += "<h2>No collections found</h2>"
+      return
+    }; 
+    for (let i = 0; i <result.length; i++) {
+        let li = document.createElement("li");
+        li.setAttribute('class', "collection")
+        li.innerHTML = `<div class="collection-id">${result[i]}</div>
+        <div class="collection-btns"> 
+            <button id="matches-${result[i]}"class="collection-details">Save matches</button>
+        </div>`
+        ul.appendChild(li)
+        document.getElementById("matches-"+result[i]).onclick = function () {saveMatches(this.id)};
+      };
+    }).catch(err => {
+      alert(err);
+    }).finally(() => {
+      console.log("finished listCollectionsResults")
+    });    
+}
+
+async function saveMatches(id) {
+  id = id.replace('matches-', '')
+  await window.go.main.App.SaveMatches(id).catch(err => {
+      alert(err);
+      return
+    }).finally(() => {
+      alert("Finished saving matches")
+    });    
+}
+
+
+document.getElementById('search-faces').addEventListener('click', async function(){
+  let activeCollection =  document.getElementById("active-collection").innerText
+  if (activeCollection=== "none"){
+    alert("Choose a collection first")
+    return
+  }
+ await fetch('templates/search-faces.html')
   .then(response=> response.text())
   .then(text=> document.getElementsByClassName('content')[0].innerHTML = text);
+  highlight('search-faces')
+  listFaces(activeCollection)
 })
+
+function listFaces(collection) {  
+  const ul = document.getElementsByClassName("collections")[0]
+  ul.innerHTML = ""
+  window.go.main.App.ListFaces(collection).then(result => {
+    if (result === null) {
+      document.getElementsByClassName('content')[0].innerHTML += "<h2>No faces found</h2>"
+      return
+    }; 
+    for (let i = 0; i <result.length; i++) {
+        let li = document.createElement("li");
+        li.setAttribute('class', "face")
+        li.innerHTML = `<div class="collection-id">${result[i]}</div>
+        <div class="collection-btns"> 
+            <button id="face-${result[i]}"class="collection-details">See matches</button>
+        </div>`
+        ul.appendChild(li)
+        document.getElementById("face-"+result[i]).onclick = function () {GetMatches(this.id)};
+      };
+    }).catch(err => {
+      alert(err);
+    }).finally(() => {
+      console.log("finished listFaces")
+    });    
+}
+
+async function GetMatches(id) {
+  id = id.replace('face-', '')
+
+  await fetch('templates/face.html')
+  .then(response=> response.text())
+  .then(text=> document.getElementsByClassName('content')[0].innerHTML = text);
+
+  await window.go.main.App.GetMatches(id).catch(err => {
+    if (result === null) {
+      document.getElementsByClassName('content')[0].innerHTML += "<h2>No matches found</h2>"
+      return
+    }; 
+    const ul = document.getElementsByClassName("matches")[0]
+    ul.innerHTML = ""
+    for (let i = 0; i < result.length; i++) {
+        let li = document.createElement("li");
+        li.setAttribute('class', "match")
+        li.innerHTML = `<a>${result[i]}</a>`
+        ul.appendChild(li)
+      };
+    }).catch(err => {
+      alert(err);
+    }).finally(() => {
+      console.log("finished GetMatches")
+    });    
+}
 

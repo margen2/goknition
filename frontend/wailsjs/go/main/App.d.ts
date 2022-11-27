@@ -9,6 +9,10 @@ export function GetCollections(arg1:boolean):Promise<Array<string>>;
 
 export function GetFaces(arg1:string):Promise<Array<string>>;
 
+export function GetMatches(arg1:string):Promise<Array<string>>;
+
 export function IndexFaces(arg1:string):Promise<Error>;
+
+export function SaveMatches(arg1:string):Promise<Error>;
 
 export function SearchFaces(arg1:string):Promise<Error>;

@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"path/filepath"
+
 	"github.com/margen2/goknition/backend/api"
 	"github.com/margen2/goknition/backend/data"
 	"github.com/margen2/goknition/backend/db"
@@ -69,7 +71,7 @@ func SearchImages(collection, path string) error {
 }
 
 //Getmatches returns all of the images based on the given Face ID
-func GetMatches(FaceID string) ([]models.Image, error) {
+func GetMatches(FaceID string) ([]string, error) {
 	db, err := db.ConnectDB()
 	if err != nil {
 		return nil, err
@@ -78,9 +80,14 @@ func GetMatches(FaceID string) ([]models.Image, error) {
 
 	repositorie := repositories.NewImagesRepositorie(db)
 
-	images, err := repositorie.GetMatches(FaceID)
+	matches, err := repositorie.GetMatches(FaceID)
 	if err != nil {
 		return nil, err
+	}
+	
+	images := make([]string, len(matches))
+	for _, match := range matches {
+		images = append(images, filepath.Join(match.Path, match.Filename))
 	}
 	return images, nil
 }

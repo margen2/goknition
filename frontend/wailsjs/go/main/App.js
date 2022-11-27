@@ -18,8 +18,16 @@ export function GetFaces(arg1) {
   return window['go']['main']['App']['GetFaces'](arg1);
 }
 
+export function GetMatches(arg1) {
+  return window['go']['main']['App']['GetMatches'](arg1);
+}
+
 export function IndexFaces(arg1) {
   return window['go']['main']['App']['IndexFaces'](arg1);
+}
+
+export function SaveMatches(arg1) {
+  return window['go']['main']['App']['SaveMatches'](arg1);
 }
 
 export function SearchFaces(arg1) {

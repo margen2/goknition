@@ -55,7 +55,7 @@ func SetConnection(user, pw, dbName string) error {
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS images (
 		id INT auto_increment PRIMARY KEY,
 		file_name VARCHAR(100) NOT NULL,
-		image_path VARCHAR(200) NOT NULL,
+		file_path VARCHAR(200) NOT NULL,
 		collection_id INT NOT NULL, 
 		FOREIGN KEY (collection_id) 
 		REFERENCES collections(id)

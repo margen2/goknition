@@ -23,6 +23,7 @@ func loadConfig() {
 			if err != nil {
 				log.Fatal(err)
 			}
+			log.Fatal("resetting application")
 		} else {
 			log.Fatal(err)
 		}

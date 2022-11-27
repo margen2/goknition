@@ -126,3 +126,30 @@ func (a *App) SearchFaces(collectionID string) error {
 	}
 	return nil
 }
+
+// Results
+// =====================
+
+func (a *App) SaveMatches(collectionID string) error {
+	dir, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Select folder to save results",
+	})
+	if err != nil {
+		return err
+	}
+
+	err = controllers.SaveMatches(collectionID, dir)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *App) GetMatches(faceID string) ([]string, error) {
+	images, err := controllers.GetMatches(faceID)
+	if err != nil {
+		return nil, err
+	}
+
+	return images, nil
+}

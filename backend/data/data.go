@@ -26,8 +26,8 @@ func LoadFaces(path string) ([]models.Face, error) {
 		var face models.Face
 
 		face.FaceID = dir.Name()
-
-		images, err := os.ReadDir(filepath.Join(path, dir.Name()))
+		dirPath := filepath.Join(path, dir.Name())
+		images, err := os.ReadDir(dirPath)
 		if err != nil {
 			return nil, fmt.Errorf("os.readdir: %w", err)
 		}
@@ -40,8 +40,7 @@ func LoadFaces(path string) ([]models.Face, error) {
 			if strings.ToLower(filepath.Ext(image.Name())) != ".jpg" {
 				continue
 			}
-
-			face.Images = append(face.Images, models.Image{ID: 0, Filename: image.Name(), Path: path})
+			face.Images = append(face.Images, models.Image{ID: 0, Filename: image.Name(), Path: dirPath})
 
 		}
 		faces = append(faces, face)
@@ -70,7 +69,6 @@ func getImages(path string) error {
 		if strings.ToLower(filepath.Ext(dir.Name())) != ".jpg" {
 			continue
 		}
-
 		images = append(images, models.Image{ID: 0, Filename: dir.Name(), Path: path})
 	}
 
