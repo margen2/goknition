@@ -23,18 +23,18 @@ func ConnectDB() (*sql.DB, error) {
 	return db, nil
 }
 
-func SetConnection(user, pw, dbName string) error {
+func SetConnection(user, pw string) error {
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@/?charset=utf8&parseTime=True&loc=Local", user, pw))
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS goknition_new;")
+	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS gok;")
 	if err != nil {
 		return err
 	}
 	db.Close()
 
-	StringConnectionBD = fmt.Sprintf("%s:%s@/%s?charset=utf8&parseTime=True&loc=Local", user, pw, dbName)
+	StringConnectionBD = fmt.Sprintf("%s:%s@/gok?charset=utf8&parseTime=True&loc=Local", user, pw)
 	db, err = sql.Open("mysql", StringConnectionBD)
 	if err != nil {
 		return err
